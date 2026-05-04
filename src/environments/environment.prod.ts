@@ -1,9 +1,9 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'https://localhost:7240/api',
 };
 
 export const environmentImageUrl = {
-  production: false,
+  production: true,
   apiUrl: 'https://localhost:7240'
 };
