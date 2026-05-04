@@ -17,6 +17,7 @@
         "build": {
           "builder": "@ngx-env/builder:application",
           "options": {
+            "outputPath": "dist/forntend",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
