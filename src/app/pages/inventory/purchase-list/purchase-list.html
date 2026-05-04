@@ -1,0 +1,239 @@
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold"><i class="fas fa-shopping-cart mr-2 text-info"></i>Purchase
+                        Management</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <button class="btn btn-info shadow-sm" (click)="createNewPurchase()">
+                        <i class="fas fa-plus-circle mr-1"></i> New Purchase
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-file-invoice-dollar"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Purchases</span>
+                            <span class="info-box-number text-lg">{{ totalItems }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Amount</span>
+                            <span class="info-box-number text-lg">{{ getTotalAmount() | currency }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning text-white"><i class="fas fa-truck"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Unique Vendors</span>
+                            <span class="info-box-number text-lg">{{ getUniqueVendorsCount() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Search PO Number</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control border-left-0" placeholder="Search PO..."
+                                    [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Start Date</label>
+                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedStartDate"
+                                (change)="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">End Date</label>
+                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedEndDate"
+                                (change)="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Vendor</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedVendorId"
+                                (ngModelChange)="applyFilters()">
+                                <option [value]="''">All Vendors</option>
+                                @for (v of vendors; track v) {
+                                <option [value]="v">{{ v }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Machine</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedMachine"
+                                (ngModelChange)="applyFilters()">
+                                <option [value]="''">All Machines</option>
+                                @for (m of machines; track m) {
+                                <option [value]="m">{{ m }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div> -->
+
+                <div class="col-md-1 col-sm-12 mb-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100 shadow-sm" (click)="clearFilters()">
+                        <i class="fas fa-sync-alt"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-valign-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="pl-3" style="width: 60px;">#</th>
+                                            <th style="min-width: 150px;">PO Number</th>
+                                            <th>Date</th>
+                                            <th>Company</th>
+                                            
+                                            <th class="text-center">Status</th>
+                                            <th class="text-right">Total Amount</th>
+                                            <th class="text-right">Paid Amount</th>
+                                            <th class="text-center pr-3" style="width: 120px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of purchases; track item.id; let i = $index) {
+                                        <tr>
+                                            <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                                                        <i class="fas fa-file-invoice fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold text-dark">{{
+                                                            item.purchaseNumber }}</span>
+                                                        <small class="text-muted">ID: {{ item.id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ item.purchaseDate | date: 'mediumDate' }}</td>
+                                           
+                                             <td>
+                                                <span class="font-weight-bold d-block text-sm">{{
+                                                    item.companyName }}</span>
+                                                <span class="text-muted text-xs">{{ item.firstName }} {{ item.lastName
+                                                    }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-success': item.isPaid === true,
+                                                    'badge-warning text-white': item.isPaid === false
+                                                    
+                                                }">
+                                                    <i class="fas fa-circle mr-1 small"></i>
+                                                    {{ item.isPaid ? 'Paid' : 'Pending' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-right font-weight-bold text-primary">
+                                                {{ item.subTotal | currency }}
+                                            </td>
+                                            <td class="text-right font-weight-bold text-primary">
+                                                {{ item.amount | currency }}
+                                            </td>
+                                            <td class="text-center pr-3">
+                                                <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" title="Edit Purchase"
+                                                        (click)="editPurchase(item)">
+                                                        <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if (purchases.length === 0) {
+                            <div class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png"
+                                    style="width: 80px; opacity: 0.3;" alt="empty">
+                                <p class="font-weight-bold mt-3 mb-0 text-muted">No Purchases Found</p>
+                                <small class="text-muted">Create your first record using the 'New Purchase' button
+                                    above.</small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ ((currentPage - 1) * itemsPerPage) + 1 }}</b> to
+                                    <b>{{ currentRecordMax }}</b> of <b>{{ totalItems }}</b> items
+                                </div>
+
+                                <ul class="pagination pagination-sm m-0">
+                                    <li class="page-item" [class.disabled]="currentPage === 1">
+                                        <button class="page-link"
+                                            (click)="onPageChange(currentPage - 1)">Previous</button>
+                                    </li>
+                                    <li class="page-item active">
+                                        <span class="page-link shadow-sm bg-info border-info">{{ currentPage }}</span>
+                                    </li>
+                                    <li class="page-item" [class.disabled]="currentPage * itemsPerPage >= totalItems">
+                                        <button class="page-link" (click)="onPageChange(currentPage + 1)">Next</button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>

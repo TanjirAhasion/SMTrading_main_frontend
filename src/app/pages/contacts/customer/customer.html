@@ -1,0 +1,160 @@
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Customer Management</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Contacts</a></li>
+                        <li class="breadcrumb-item active">Customer</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-sm-6">
+                                    <h3 class="card-title">Customer List</h3>
+                                </div>
+                                <div class="col-sm-6 mt-2 mt-sm-0">
+                                    <button class="btn btn-light btn-sm float-sm-right" (click)="toggleForm()">
+                                        <i class="fas" [ngClass]="showForm ? 'fa-list mr-1' : 'fa-plus mr-1'"></i> 
+                                        {{ showForm ? 'Back to List' : 'Add New Customer' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (showForm) {
+                        <div class="card-body border-bottom">
+                            <form #customerForm="ngForm">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>First Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" [(ngModel)]="customer.firstName" name="firstName" #fname="ngModel" required placeholder="First Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Last Name</label>
+                                            <input type="text" class="form-control" [(ngModel)]="customer.lastName" name="lastName" placeholder="Last Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Company Name</label>
+                                            <input type="text" class="form-control" [(ngModel)]="customer.companyName" name="companyName" placeholder="e.g. Acme Corp">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Primary Phone <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" [(ngModel)]="customer.phone" name="phone" required placeholder="01XXX-XXXXXX">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Email Address</label>
+                                            <input type="email" class="form-control" [(ngModel)]="customer.email" name="email" placeholder="email@example.com">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Address</label>
+                                    <textarea class="form-control" rows="2" [(ngModel)]="customer.address" name="address" placeholder="Full Address"></textarea>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="isActive" [(ngModel)]="customer.isActive" name="isActive">
+                                    <label class="form-check-label" for="isActive">Active Customer</label>
+                                </div>
+
+                                <div class="clearfix">
+                                    <button class="btn btn-success float-right ml-2" [disabled]="customerForm.invalid" (click)="saveCustomer()">
+                                        {{ isEditMode ? 'Update' : 'Save' }} Customer
+                                    </button>
+                                    <button type="button" class="btn btn-secondary float-right" (click)="cancel()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        }
+
+                        <div class="card-body">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-primary"></div>
+                                <p class="mt-2">Loading customers...</p>
+                            </div>
+                            } 
+                            
+                            @if (!loading && customers.length > 0 && !showForm) {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Company</th>
+                                            <th>Contact</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of customers; track item.id; let i = $index) {
+                                        <tr>
+                                            <td>{{ i + 1 }}</td>
+                                            <td><strong>{{ item.firstName }} {{ item.lastName }}</strong></td>
+                                            <td>{{ item.companyName || '-' }}</td>
+                                            <td>{{ item.phone }}</td>
+                                            <td>{{ item.email || '-' }}</td>
+                                            <td>
+                                                <span class="badge" [ngClass]="item.isActive ? 'badge-success' : 'badge-danger'">
+                                                    {{ item.isActive ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-xs btn-primary mr-1" (click)="toggleForm(true, item)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-xs btn-danger" (click)="deleteCustomer(item.id)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            } 
+                            
+                            @if (!loading && customers.length === 0 && !showForm) {
+                            <div class="alert alert-light text-center p-5">
+                                <i class="fas fa-address-book fa-3x text-muted mb-3"></i>
+                                <p>No customer records found.</p>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

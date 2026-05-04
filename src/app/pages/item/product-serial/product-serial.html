@@ -1,0 +1,544 @@
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold"><i class="fas fa-barcode mr-2 text-info"></i>Machine Serial
+                        Management</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <button class="btn btn-info shadow-sm" (click)="openForm()">
+                        <i class="fas fa-plus-circle mr-1"></i> Add New Unit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-boxes"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Inventory</span>
+                            <span class="info-box-number text-lg">{{ totalCount }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning text-white"><i class="fas fa-hand-holding-usd"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">On Rent</span>
+                            <span class="info-box-number text-lg">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-danger text-white"><i class="fas fa-unlink"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Not linked to machine</span>
+                            <span class="info-box-number text-lg">0</span>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Search Inventory</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control border-left-0"
+                                    placeholder="Filter by Serial, Product, or Brand..." [(ngModel)]="search"
+                                    (ngModelChange)="onSearch()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Status</label>
+                            <select class="form-control border shadow-sm" (ngModelChange)="onSearch()">
+                                <option [value]="''">All Statuses</option>
+                                @for (s of serialStatus; track s.id) {
+                                <option [value]="s.id">{{ s.name }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Linked Status</label>
+                            <select class="form-control border shadow-sm" (ngModelChange)="onSearch()">
+                                <option [value]="''">All </option>
+                                <option [value]="true"> Linked</option>
+                                <option [value]="false">not Linked</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-info shadow-sm">
+
+                        @if (showForm) {
+                        <div class="card-body bg-light border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="text-info mb-0 font-weight-bold">
+                                    {{ isEditMode ? 'Edit Serial Details' : 'Register New Machine Unit' }}
+                                </h5>
+                                <button type="button" class="close" (click)="closeForm()">&times;</button>
+                            </div>
+
+                            <form #productForm="ngForm">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Target Product <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-control select2 shadow-sm"
+                                                [(ngModel)]="serial.productId" name="productId" required
+                                                #prodField="ngModel"
+                                                [ngClass]="{'is-invalid': prodField.invalid && prodField.touched}">
+                                                <option [value]="null" disabled>-- Select Product --</option>
+                                                @for (p of products; track p.id) {
+                                                <option [value]="p.id">{{ p.name }}</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Serial Number</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-fingerprint"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control bg-white"
+                                                    [value]="isEditMode ? serial.serialNumber : 'Auto-Generated'"
+                                                    readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Status</label>
+                                            <select class="form-control shadow-sm" [(ngModel)]="serial.status"
+                                                name="status">
+                                                <option *ngFor="let s of serialStatus" [value]="s.id">
+                                                    {{ s.name.replace('In', 'In ') }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Purchase Cost</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.purchaseCost" name="purchaseCost"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Selling Cost</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.sellingCost" name="sellingCost"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Rental Rate</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.rentalCost" name="rentalCost"
+                                                    placeholder="Per Day">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 text-right">
+                                    <button type="button" class="btn btn-default mr-2"
+                                        (click)="closeForm()">Cancel</button>
+                                    <button class="btn btn-success px-4 shadow-sm" (click)="saveSerial()"
+                                        [disabled]="prodField.invalid">
+                                        <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Unit' : 'Generate &
+                                        Save' }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        }
+
+                        <div class="card-body p-0">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-info mb-3" role="status"></div>
+                                <p class="text-muted">Synchronizing serial inventory...</p>
+                            </div>
+                            }
+
+                            @if (!loading && serials.length > 0) {
+                            <div class="table-responsive">
+                                <table class="table table-hover table-valign-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="pl-3" style="width: 50px;">#</th>
+                                            <th style="min-width: 180px;">Unit Identity</th>
+                                            <th>Machine Specification</th>
+                                            <th class="text-right">Costs</th>
+                                            <th class="text-center">Linkage</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center pr-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of serials; track item.id; let i = $index) {
+                                        <tr>
+                                            <td class="pl-3 text-muted">{{ ((page - 1) * pageSize) + i + 1 }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                                                        <i class="fas fa-microchip fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold text-dark">{{
+                                                            item.serialNumber }}</span>
+                                                        <small class="badge badge-light border text-muted">ID: {{
+                                                            item.id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="font-weight-bold d-block text-sm">{{ item.productName
+                                                    }}</span>
+                                                <span class="text-muted text-xs">{{ item.brandName }} | {{ item.model
+                                                    }}</span>
+                                            </td>
+                                            <td class="text-right">
+                                                <div class="text-sm">
+                                                    <span class="text-muted">Buy:</span> {{ item.purchaseCost |
+                                                    number:'1.2-2' }}<br>
+                                                    <span class="text-muted">Sell:</span> <span class="text-primary">{{
+                                                        item.sellingCost | number:'1.2-2' }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (item.isSerialNumberLinkToProduct) {
+                                                <span class="badge badge-success p-1 px-2 rounded">
+                                                    <i class="fas fa-link mr-1"></i> Linked
+                                                </span>
+                                                } @else {
+                                                <button class="btn btn-sm btn-outline-primary py-0"
+                                                    (click)="openLinkModal(item)">
+                                                    <i class="fas fa-unlink mr-1"></i> Link Photo
+                                                </button>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-success': item.status === 'InStock',
+                                                    'badge-warning text-white': item.status === 'InRent',
+                                                    'badge-secondary': item.status === 'Sold',
+                                                    'badge-info': item.status === 'InService',
+                                                    'badge-danger': item.status === 'Damaged'
+                                                }">
+                                                    <i class="fas fa-circle mr-1 small"></i>
+                                                    {{ item.status.replace('In', 'In ') }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center pr-3">
+                                                <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" (click)="edit(item)"
+                                                        title="Edit Unit">
+                                                        <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border"
+                                                        (click)="openGalleryLinkModal(item)" title="Gallery">
+                                                        <i class="fas fa-images text-primary"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            }
+
+                            @if (!loading && serials.length === 0) {
+                            <div class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png"
+                                    style="width: 80px; opacity: 0.3;" alt="empty">
+                                <p class="text-bold mt-3 mb-0 text-muted">No Machine Serials Found</p>
+                                <small class="text-muted">Register your first unit using the 'Add New' button
+                                    above.</small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ ((page - 1) * pageSize) + 1 }}</b> to
+                                    <b>{{ (page * pageSize > totalCount) ? totalCount : (page * pageSize) }}</b>
+                                    of <b>{{ totalCount }}</b> items
+                                </div>
+
+                                <ul class="pagination pagination-sm m-0">
+                                    <li class="page-item" [class.disabled]="page === 1">
+                                        <button class="page-link" (click)="onPageChange(page - 1)">Previous</button>
+                                    </li>
+                                    <li class="page-item active">
+                                        <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                                    </li>
+                                    <li class="page-item" [class.disabled]="page * pageSize >= totalCount">
+                                        <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" id="machineImageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas fa-camera-retro mr-2"></i>Machine Gallery: {{ selectedSerial?.serialNumber }}
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body bg-light">
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white py-2">
+                            <h6 class="font-weight-bold text-info mb-0">Linked Serial Machine Photo</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            @if (selectedSerial?.machineImageUrl) {
+                            <div class="position-relative d-inline-block">
+                                <img [src]="imageBaseUrl + selectedSerial.machineImageUrl" class="rounded shadow-sm"
+                                    style="max-height: 250px; object-fit: contain;">
+                                <button class="btn btn-sm btn-danger position-absolute" style="top:10px; right:10px;"
+                                    (click)="removeLinkedImage(selectedSerial.id)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            } @else {
+                            <div class="py-4 text-muted">
+                                <i class="fas fa-unlink fa-2x text-secondary mb-2"></i>
+                                <p class="mb-1">No primary machine photo linked to this serial.</p>
+                                <button class="btn btn-sm btn-outline-success mt-2" (click)="triggerLinkImageModal()">
+                                    <i class="fas fa-link mr-1"></i> Link Photo
+                                </button>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-bold text-muted mb-0">Additional Gallery Photos</h6>
+                            <span class="badge badge-info px-2 py-1">{{ images.length }} Photos</span>
+                        </div>
+
+                        <div class="card-body bg-light">
+                            <div class="horizontal-scroll-container" *ngIf="images && images.length > 0; else noImages">
+                                <div class="scroll-wrapper">
+                                    <div class="scroll-item" *ngFor="let img of images">
+                                        <div class="card border-0 shadow-sm overflow-hidden"
+                                            style="width: 200px; height: 230px;">
+                                            <div class="position-relative view-overlay">
+                                                <img [src]="imageBaseUrl + img.imageUrl" class="card-img-top"
+                                                    style="height:150px; object-fit:cover;">
+                                                <button class="btn btn-sm btn-danger position-absolute shadow"
+                                                    style="top:8px; right:8px;" (click)="deleteImage(img.id)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                            <div class="card-footer bg-white p-2 d-flex flex-column justify-content-center"
+                                                style="height: 80px;">
+                                                <p class="text-xs text-center font-weight-bold mb-0 text-truncate text-uppercase w-100"
+                                                    [title]="img.title">
+                                                    {{ img.title || 'Gallery Photo' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ng-template #noImages>
+                                <div class="text-center py-4 border rounded bg-white">
+                                    <i class="fas fa-images fa-2x text-muted opacity-50"></i>
+                                    <p class="text-muted text-sm mt-1 mb-0">No additional images uploaded for this
+                                        serial unit.</p>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+
+                    <div class="card mt-2 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="font-weight-bold text-muted mb-3">Upload New Image</h6>
+
+                            <form #imageForm="ngForm">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col-md-8 mr-md-2">
+
+                                        <input type="text" class="form-control" name="imageTitle"
+                                            placeholder="Description (e.g. Serial Plate)" [(ngModel)]="newImage.title"
+                                            #imageTitleField="ngModel"
+                                            [ngClass]="{'is-invalid': imageTitleField.invalid && imageTitleField.touched}"
+                                            required />
+
+                                        @if (imageTitleField.invalid && imageTitleField.touched) {
+                                        <span class="text-danger small d-block mt-1">Image title is required.</span>
+                                        }
+
+                                        <div class="custom-file mt-2">
+                                            <input type="file" class="custom-file-input"
+                                                (change)="onFileSelected($event)">
+                                            <label class="custom-file-label text-truncate">{{ selectedFileName ||
+                                                'Choose file...' }}</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3 mt-2 mt-md-0 d-flex flex-column">
+                                        <button class="btn btn-primary shadow-sm py-2 mb-2"
+                                            (click)="uploadImage(imageForm)"
+                                            [disabled]="!selectedFile || uploading || imageForm.invalid">
+                                            <i class="fas fa-upload mr-1"></i> {{ uploading ? '...' : 'Upload' }}
+                                        </button>
+
+                                        <button class="btn btn-secondary shadow-sm py-2"
+                                            (click)="resetUploadForm(); imageForm.resetForm()">
+                                            <i class="fas fa-times mr-1"></i> Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="linkImageModal" tabindex="-1" role="dialog" aria-labelledby="linkImageModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light" id="linkImageModalLabel">
+                        <i class="fas fa-link mr-2"></i>Link Machine Serial
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <div class="alert alert-light border shadow-sm mb-3" role="alert">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle text-info fa-2x mr-3 mt-1"></i>
+                            <div>
+                                <span class="font-weight-bold text-dark d-block">Upload New
+                                    Image</span>
+                                <small class="text-muted">Attach this file as the primary machine photo
+                                    <br> Serial :<strong>{{ selectedSerial?.serialNumber }}</strong>
+                                    <br> Product :<strong>{{ selectedSerial?.productName }}</strong>
+                                    <br> Model :<strong>{{ selectedSerial?.model }}</strong>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form #linkForm="ngForm">
+
+                        @if (linkImagePreview) {
+                        <div class="form-group mt-3 text-center">
+                            <label class="font-weight-bold text-muted text-sm d-block mb-2">Image Preview</label>
+                            <div class="position-relative d-inline-block p-2 bg-white border rounded shadow-sm">
+                                <img [src]="linkImagePreview" class="rounded"
+                                    style="max-height: 180px; max-width: 100%; object-fit: contain;">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute"
+                                    style="top: 2px; right: 2px;" (click)="removeLinkPreview()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        }
+
+                        <div class="form-group mt-2">
+                            <label class="font-weight-bold text-muted text-sm">Upload File for Linkage</label>
+                            <div class="custom-file shadow-sm">
+                                <input type="file" class="custom-file-input" id="linkFileInput"
+                                    (change)="onLinkFileSelected($event)">
+                                <label class="custom-file-label text-truncate" for="linkFileInput">
+                                    {{ selectedLinkFileName || 'Choose new file to link...' }}
+                                </label>
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-white border-0 justify-content-between">
+                    <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info px-4 shadow-sm" (click)="saveImageLinkage()"
+                        [disabled]="!selectedImageId && !selectedLinkFile">
+                        <i class="fas fa-check mr-1"></i> Confirm Linkage
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

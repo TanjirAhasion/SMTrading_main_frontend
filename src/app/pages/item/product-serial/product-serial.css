@@ -1,0 +1,60 @@
+.bg-soft-info {
+    background-color: rgba(23, 162, 184, 0.1);
+}
+
+.table-valign-middle td {
+    vertical-align: middle !important;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.card-img-top {
+    transition: transform .3s;
+}
+
+.card-img-top:hover {
+    transform: scale(1.05);
+}
+
+.badge-pill {
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* Horizontal scrolling styles */
+.horizontal-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #17a2b8 #f4f6f9;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+    background: #f4f6f9;
+    border-radius: 4px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #17a2b8;
+    border-radius: 4px;
+    border: 2px solid #f4f6f9;
+}
+
+.scroll-wrapper {
+    display: flex;
+    gap: 15px;
+}
+
+.scroll-item {
+    flex: 0 0 auto;
+}

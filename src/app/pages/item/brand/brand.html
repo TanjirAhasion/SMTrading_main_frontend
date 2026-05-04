@@ -1,0 +1,163 @@
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Machine Brand</h1>
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Master data</a></li>
+                        <li class="breadcrumb-item active">Machine Brand</li>
+                    </ol>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h3 class="card-title">Brand</h3>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <button class="btn btn-default float-right" (click)="openForm()">
+                                        + Add New Brand
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="card-body">
+                            @if (showForm) {
+                            <div>
+                                <div class="form-group">
+                                    <label class="form-label">Name <span class="text-danger"> * </span> </label>
+                                    <input type="text" class="form-control" [(ngModel)]="brand.name" #nameField="ngModel" [ngClass]="{'is-invalid': nameField.invalid && (nameField.dirty || nameField.touched)}" placeholder="Enter Band Name" required>
+
+                                    <div *ngIf="nameField.invalid && (nameField.dirty || nameField.touched)" class="invalid-feedback">
+                                        Please provide a brand name.
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" rows="3" [(ngModel)]="brand.description" placeholder="Enter Band Description"></textarea>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label for="exampleInputFile">Upload Brand logo</label>
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="exampleInputFile" [(ngModel)]="brand.logoUrl">
+                                            <label class="custom-file-label" for="exampleInputFile">Choose logo</label>
+                                        </div>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">Upload</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="isActive" [(ngModel)]="brand.isActive">
+
+                                    <label class="form-check-label" for="isActive">
+                                            Active
+                                        </label>
+                                </div>
+
+
+
+                                <div class="float-right">
+                                    <button class="btn btn-success mr-2" (click)="saveBrand()">
+                                        {{ isEditMode ? 'Update' : 'Save' }}
+                                    </button>
+                                    <button class="btn btn-secondary" (click)="closeForm()">
+                                        Close
+                                    </button>
+                                </div>
+
+                            </div>
+                            }
+
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+
+
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-primary"></div>
+                                <p>Loading brands...</p>
+                            </div>
+                            } @if (!loading && brands.length > 0) {
+                            <table id="brandLoadDataTables" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th width="120">Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @for (item of brands; track item.id; let i = $index) {
+                                    <tr>
+                                        <td>{{ i + 1 }}</td>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.description || '-' }}</td>
+
+                                        <td>
+                                            <span class="badge" [ngClass]="item.isActive ? 'bg-success' : 'bg-danger'">
+                                                {{ item.isActive ? 'Active' : 'Inactive' }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" (click)="edit(item)">
+                                                Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    }
+
+
+
+                                </tbody>
+                            </table>
+                            } @if (!loading && brands.length === 0) {
+                            <div class="text-center p-5">
+                                No data found
+                            </div>
+                            }
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
