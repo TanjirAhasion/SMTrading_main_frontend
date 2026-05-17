@@ -1,0 +1,418 @@
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold"><i class="fas fa-file-contract mr-2 text-info"></i>Rental Management</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <button class="btn btn-info shadow-sm" (click)="createNewRental()">
+                        <i class="fas fa-plus-circle mr-1"></i> New Rental Contract
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-file-signature"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Rentals</span>
+                            <span class="info-box-number text-lg">{{ totalItems }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-dollar-sign"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Rent</span>
+                            <span class="info-box-number text-lg">{{ getTotalAmount() | currency }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning text-white"><i class="fas fa-users"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Unique Customers</span>
+                            <span class="info-box-number text-lg">{{ getUniqueCustomersCount() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Search Contract Number</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control border-left-0" placeholder="Search rental..."
+                                    [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                        <i class="fas fa-search mr-1"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Start Date</label>
+                            <input type="date" class="form-control border shadow-sm"
+                                [(ngModel)]="selectedStartDate" (change)="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">End Date</label>
+                            <input type="date" class="form-control border shadow-sm"
+                                [(ngModel)]="selectedEndDate" (change)="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Customer</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId"
+                                (ngModelChange)="applyFilters()">
+                                <option [value]="''">All Customers</option>
+                                @for (c of customers; track c.id) {
+                                <option [value]="c.id">{{ c.name }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Status</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatus"
+                                (ngModelChange)="applyFilters()">
+                                <option [value]="''">All Statuses</option>
+                                <option [value]="'Active'">Active</option>
+                                <option [value]="'Closed'">Closed</option>
+                                <option [value]="'Pending'">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-1 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reset</label>
+                            <button type="button" class="btn btn-default btn-block border shadow-sm"
+                                (click)="clearFilters()"
+                                [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="rentals.length === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-body p-0">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-info mb-3" role="status"></div>
+                                <p class="text-muted">Loading rental data...</p>
+                            </div>
+                            }
+
+                            @if (!loading && rentals.length > 0) {
+                            <div class="table-responsive" id="rentalPrintSection">
+                                <table class="table table-hover table-valign-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="pl-3" style="width: 60px;">#</th>
+                                            <th style="min-width: 170px;">Contract Number</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Customer Name</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-right">Total Rent</th>
+                                            <th class="text-center pr-3" style="width: 120px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of rentals; track item.id; let i = $index) {
+                                        <tr>
+                                            <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                                                        <i class="fas fa-file-contract fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold text-dark">{{ getContractNumber(item) }}</span>
+                                                        <small class="text-muted">ID: {{ item.id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ item.startDate | date: 'mediumDate' }}</td>
+                                            <td>{{ item.endDate | date: 'mediumDate' }}</td>
+                                            <td><span class="font-weight-bold">{{ getCustomerName(item) }}</span></td>
+                                            <td class="text-center">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-success': getStatus(item) === 'Active',
+                                                    'badge-warning text-white': getStatus(item) === 'Pending',
+                                                    'badge-secondary': getStatus(item) === 'Closed'
+                                                }">
+                                                    <i class="fas fa-circle mr-1 small"></i>
+                                                    {{ getStatus(item) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-right font-weight-bold text-primary">
+                                                {{ getRentalAmount(item) | currency }}
+                                            </td>
+                                            <td class="text-center pr-3">
+                                                <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" title="View Rental"
+                                                        (click)="viewRental(item)">
+                                                        <i class="fas fa-eye text-primary"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border" title="Edit Rental"
+                                                        (click)="editRental(item)">
+                                                        <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            }
+
+                            @if (!loading && rentals.length === 0) {
+                            <div class="text-center py-5">
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-bold mt-3 mb-0 text-muted">No Rentals Found</p>
+                                <small class="text-muted">Create your first record using the 'New Rental Contract' button above.</small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ pageStart }}</b> to
+                                    <b>{{ currentRecordMaxRecord }}</b> of <b>{{ totalItems }}</b> items
+                                </div>
+
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="itemsPerPage" (ngModelChange)="onPageSizeChange()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="currentPage === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(currentPage - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-info border-info">{{ currentPage }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="currentPage >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(currentPage + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@if (selectedRental) {
+<div class="modal fade show d-block" style="background: rgba(0,0,0,0.6); z-index: 1050;" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-file-contract mr-2"></i> Rental Contract Preview</h5>
+                <button type="button" class="close text-white" (click)="closeRentalView()">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-4" id="rental-contract-print">
+                <div class="row mb-4">
+                    <div class="col-sm-6">
+                        <h4 class="text-primary font-weight-bold mb-0">StockoraPOS</h4>
+                        <p class="text-muted small">Rental Contract Preview</p>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <p class="mb-0"><strong>Contract:</strong> {{ getContractNumber() }}</p>
+                        <p class="mb-0"><strong>Start:</strong> {{ selectedRental.startDate | date:'dd/MM/yyyy' }}</p>
+                        <p class="mb-0"><strong>End:</strong> {{ selectedRental.endDate | date:'dd/MM/yyyy' }}</p>
+                        <p class="mb-0">
+                            <strong>Status:</strong>
+                            <span class="badge" [ngClass]="{
+                                'badge-success': getStatus() === 'Active',
+                                'badge-warning text-white': getStatus() === 'Pending',
+                                'badge-secondary': getStatus() === 'Closed'
+                            }">
+                                {{ getStatus() }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-sm-6">
+                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Customer Details</p>
+                        <h6 class="mb-0">{{ selectedRental.companyName || getCustomerName() }}</h6>
+                        <p class="text-muted small mb-0">
+                            {{ getCustomerContactName() }}<br>
+                            Customer ID: {{ selectedRental.customerId }}
+                        </p>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Billing</p>
+                        <span class="badge badge-info h6">{{ getBillingCycle() }}</span>
+                        <p class="mb-0 mt-2"><strong>Payment:</strong> {{ getPaymentMethod() }}</p>
+                        <p class="mb-0"><strong>Next Billing:</strong> {{ selectedRental.nextBillingDate | date:'dd/MM/yyyy' }}</p>
+                    </div>
+                </div>
+
+                <table class="table table-sm table-striped border">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Machine</th>
+                            <th class="text-center">Qty</th>
+                            <th>Serials</th>
+                            <th class="text-right">Rent</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (getSelectedRentalItems().length > 0) {
+                        <tr *ngFor="let item of getSelectedRentalItems(); let i = index">
+                            <td>{{ i + 1 }}</td>
+                            <td>{{ getRentalItemName(item) }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td>{{ getRentalItemSerials(item) || '-' }}</td>
+                            <td class="text-right">{{ item.unitRent | number:'1.2-2' }}</td>
+                            <td class="text-right font-weight-bold">{{ getRentalItemTotal(item) | number:'1.2-2' }}</td>
+                        </tr>
+                        } @else {
+                        <tr>
+                            <td>1</td>
+                            <td>
+                                {{ getContractNumber() }}
+                                <small class="text-muted d-block">Item details are not available from the list response.</small>
+                            </td>
+                            <td class="text-center">-</td>
+                            <td>-</td>
+                            <td class="text-right">-</td>
+                            <td class="text-right font-weight-bold">{{ getRentalAmount() | number:'1.2-2' }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="row justify-content-end mt-4">
+                    <div class="col-sm-5">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th class="text-muted">Security Deposit:</th>
+                                <td class="text-right font-weight-bold text-dark">{{ selectedRental.securityDeposit | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Billing Cycle:</th>
+                                <td class="text-right">{{ getBillingCycle() }}</td>
+                            </tr>
+                            <tr class="border-top">
+                                <th class="h5">Total Rent:</th>
+                                <td class="text-right h5 text-primary font-weight-bold">{{ getRentalAmount() | number:'1.2-2' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                @if (selectedRental.note) {
+                <div class="mt-4">
+                    <p class="font-weight-bold mb-1">Notes</p>
+                    <div class="border rounded p-3 bg-light">{{ selectedRental.note }}</div>
+                </div>
+                }
+            </div>
+
+            <div class="modal-footer bg-light border-0 justify-content-between">
+                <button type="button" class="btn btn-outline-secondary px-4" (click)="closeRentalView()">
+                    Close
+                </button>
+                <div>
+                    <button type="button" class="btn btn-outline-info px-4 mr-2" (click)="printRentalContract()">
+                        <i class="fas fa-print mr-1"></i> Print
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" (click)="downloadRentalContractPdf()">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}

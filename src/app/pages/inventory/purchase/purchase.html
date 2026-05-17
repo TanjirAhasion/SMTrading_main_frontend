@@ -22,75 +22,85 @@
               <h3 class="card-title"> Vendor Information</h3>
             </div>
             <div class="card-body">
-             <div class="row">
-            <div class="col-md-7">
-                <div class="form-group">
-                    <label class="small font-weight-bold text-uppercase text-muted">Vendor Name <span class="text-danger">*</span></label>
+              <div class="row">
+                <div class="col-md-7">
+                  <div class="form-group">
+                    <label class="small font-weight-bold text-uppercase text-muted">Vendor Name <span
+                        class="text-danger">*</span></label>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text bg-white border-right-0"><i class="fas fa-truck text-info"></i></span>
-                        </div>
-                        <select class="form-control select2 border-left-0" [(ngModel)]="request.vendorId" (change)="onVendorChange()">
-                            <option [value]="0">-- Select Vendor --</option>
-                            <option *ngFor="let v of vendors" [value]="v.id">{{v.companyName}} ({{v.firstName}})</option>
-                        </select>
+                      <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-right-0"><i
+                            class="fas fa-truck text-info"></i></span>
+                      </div>
+                      <select class="form-control select2 border-left-0" [(ngModel)]="request.vendorId"
+                        (ngModelChange)="onVendorChange()" [disabled]="vendorsLoading">
+                        <option [ngValue]="0">
+                          {{ vendorsLoading ? 'Loading vendors...' : '-- Select Vendor --' }}
+                        </option>
+                        <option *ngFor="let v of vendors" [ngValue]="v.id">{{v.companyName}} ({{v.firstName}})</option>
+                      </select>
                     </div>
+                    @if (vendorsLoadError) {
+                    <span class="text-danger small d-block mt-1">{{ vendorsLoadError }}</span>
+                    }
+                  </div>
                 </div>
-            </div>
 
-            <div class="col-md-5">
-                <div class="form-group">
+                <div class="col-md-5">
+                  <div class="form-group">
                     <label class="small font-weight-bold text-uppercase text-muted">Purchase Date</label>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text bg-white border-right-0"><i class="fas fa-calendar-alt text-info"></i></span>
-                        </div>
-                        <input type="date" class="form-control border-left-0" [(ngModel)]="purchaseDate">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-right-0"><i
+                            class="fas fa-calendar-alt text-info"></i></span>
+                      </div>
+                      <input type="date" class="form-control border-left-0" [(ngModel)]="purchaseDate">
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
+              </div>
 
-             @if (selectedVendor) {
-        <hr class="my-3 opacity-5">
-        <div class="row animate__animated animate__fadeIn">
-            <div class="col-sm-4 mb-3">
-                <div class="d-flex align-items-center">
+              @if (selectedVendor) {
+              <hr class="my-3 opacity-5">
+              <div class="row animate__animated animate__fadeIn">
+                <div class="col-sm-4 mb-3">
+                  <div class="d-flex align-items-center">
                     <div class="info-icon-circle mr-3">
-                        <i class="fas fa-user-tie text-primary"></i>
+                      <i class="fas fa-user-tie text-primary"></i>
                     </div>
                     <div>
-                        <small class="text-muted d-block font-weight-bold">Contact Person</small>
-                        <span class="text-dark">{{selectedVendor.firstName}} {{selectedVendor.lastName}}</span>
+                      <small class="text-muted d-block font-weight-bold">Contact Person</small>
+                      <span class="text-dark">{{selectedVendor.firstName}} {{selectedVendor.lastName}}</span>
                     </div>
+                  </div>
                 </div>
-            </div>
 
-            <div class="col-sm-4 mb-3">
-                <div class="d-flex align-items-center">
+                <div class="col-sm-4 mb-3">
+                  <div class="d-flex align-items-center">
                     <div class="info-icon-circle mr-3">
-                        <i class="fas fa-phone-alt text-success"></i>
+                      <i class="fas fa-phone-alt text-success"></i>
                     </div>
                     <div>
-                        <small class="text-muted d-block font-weight-bold">Phone Number</small>
-                        <span class="text-dark">{{selectedVendor.phone}}</span>
+                      <small class="text-muted d-block font-weight-bold">Phone Number</small>
+                      <span class="text-dark">{{selectedVendor.phone}}</span>
                     </div>
+                  </div>
                 </div>
-            </div>
 
-            <div class="col-sm-4 mb-3">
-                <div class="d-flex align-items-center">
+                <div class="col-sm-4 mb-3">
+                  <div class="d-flex align-items-center">
                     <div class="info-icon-circle mr-3">
-                        <i class="fas fa-envelope text-warning"></i>
+                      <i class="fas fa-envelope text-warning"></i>
                     </div>
                     <div>
-                        <small class="text-muted d-block font-weight-bold">Email Address</small>
-                        <span class="text-dark text-truncate d-inline-block" style="max-width: 150px;">{{selectedVendor.email || 'N/A'}}</span>
+                      <small class="text-muted d-block font-weight-bold">Email Address</small>
+                      <span class="text-dark text-truncate d-inline-block"
+                        style="max-width: 150px;">{{selectedVendor.email || 'N/A'}}</span>
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-        }
+              </div>
+              }
             </div>
           </div>
 
@@ -122,13 +132,15 @@
                     @for (item of request.items; track $index; let i = $index) {
                     <tr>
                       <td>
-                        <select class="form-control form-control-sm" [(ngModel)]="item.productId">
+                        <select class="form-control form-control-sm" [(ngModel)]="item.productId"
+                          (ngModelChange)="onProductChange(i)" [ngClass]="{'is-invalid': item.productId <= 0}">
+                          <option [ngValue]="0">-- Select Product --</option>
                           <option *ngFor="let p of products" [value]="p.id">{{p.name}} ({{p.model}})</option>
                         </select>
                       </td>
                       <td>
                         <input type="number" class="form-control form-control-sm" [(ngModel)]="item.unitCost"
-                          (input)="calculateTotals()">
+                          (input)="calculateTotals()" [ngClass]="{'is-invalid': item.unitCost <= 0}">
                       </td>
                       <td>
                         <input type="number" class="form-control form-control-sm" [(ngModel)]="item.quantity"
@@ -165,9 +177,10 @@
             <div class="card-header">
               <h3 class="card-title">Billing Summary</h3>
             </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-between h5">
-                <span>Gross Amount:</span>
+
+           <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <span>Gross:</span>
                 <span>{{ request.subTotal | number:'1.2-2' }}</span>
               </div>
 
@@ -195,20 +208,26 @@
                 </label>
 
                 <div class="form-group mb-3">
-                  <label class="small text-muted font-weight-bold uppercase">Payment Method</label>
+                  <label class="small text-muted font-weight-bold uppercase">Cash Account</label>
                   <div class="input-group">
                     <div class="input-group-prepend">
                       <span class="input-group-text bg-white border-success">
-                        <i class="fas"
-                          [ngClass]="request.paymentMethod === 'Bank' ? 'fa-university' : 'fa-money-bill-wave'"></i>
+                        <i class="fas fa-wallet"></i>
                       </span>
                     </div>
-                    <select class="form-control form-control-md border-success" [(ngModel)]="request.paymentMethod">
-                      <option *ngFor="let method of paymentMethods" [value]="method.id">
-                        {{ method.name }}
+                    <select class="form-control form-control-md border-success" [(ngModel)]="request.cashAccountId" (ngModelChange)="onCashAccountChange()">
+                      <option [ngValue]="0">-- Select Cash Account --</option>
+                      <option *ngFor="let account of activeCashAccounts" [ngValue]="account.id">
+                        {{ account.name }}
                       </option>
                     </select>
                   </div>
+                  @if (selectedCashAccount) {
+                  <span class="badge badge-light border mt-2 px-3 py-2">
+                    <i class="fas fa-coins mr-1 text-success"></i>
+                    Current Balance: {{ selectedCashAccountBalance | number:'1.2-2' }}
+                  </span>
+                  }
                 </div>
 
                 <div class="form-group mb-2">
@@ -218,8 +237,14 @@
                       <span class="input-group-text bg-success text-white border-success font-weight-bold">$</span>
                     </div>
                     <input type="number" class="form-control form-control-lg border-success font-weight-bold"
-                      [(ngModel)]="request.paidAmount" (input)="calculateTotals()" placeholder="0.00">
+                      [(ngModel)]="request.paidAmount" (input)="calculateTotals()" placeholder="0.00"
+                      [ngClass]="{'is-invalid': isPaidAmountOverCurrentBalance}">
                   </div>
+                  @if (isPaidAmountOverCurrentBalance) {
+                  <span class="text-danger small">
+                    Paid amount cannot be more than current balance {{ selectedCashAccountBalance | number:'1.2-2' }}.
+                  </span>
+                  }
                 </div>
 
                 <div class="border-top mt-3 pt-2">
@@ -239,7 +264,8 @@
                     }}</strong></span>
               </div> -->
 
-              <button class="btn btn-success btn-block btn-lg shadow" (click)="openConfirmation()">
+              <button class="btn btn-success btn-block btn-lg shadow" (click)="openConfirmation()"
+                [disabled]="!isPurchaseValid() || isPaidAmountOverCurrentBalance">
                 <i class="fas fa-save mr-2"></i> FINALIZE PURCHASE
               </button>
             </div>
@@ -253,106 +279,107 @@
 
 @if (showConfirmation) {
 <div class="modal fade show d-block" style="background: rgba(0,0,0,0.6); z-index: 1050;" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            
-            <div class="modal-header bg-dark text-white border-0">
-                <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i> Purchase Invoice Preview</h5>
-                <button type="button" class="close text-white" (click)="showConfirmation = false">
-                    <span>&times;</span>
-                </button>
-            </div>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
 
-            <div class="modal-body p-4" id="invoice-print">
-                <div class="row mb-4">
-                    <div class="col-sm-6">
-                        <h4 class="text-primary font-weight-bold mb-0">StockoraPOS</h4>
-                        <p class="text-muted small">Purchase Order Preview</p>
-                    </div>
-                    <div class="col-sm-6 text-right">
-                        <p class="mb-0"><strong>Date:</strong> {{ purchaseDate | date:'dd/MM/yyyy' }}</p>
-                        <p class="mb-0"><strong>Status:</strong> <span class="badge badge-warning">Draft</span></p>
-                    </div>
-                </div>
+      <div class="modal-header bg-dark text-white border-0">
+        <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i> Purchase Invoice Preview</h5>
+        <button type="button" class="close text-white" (click)="showConfirmation = false">
+          <span>&times;</span>
+        </button>
+      </div>
 
-                <div class="row mb-4">
-                    <div class="col-sm-6">
-                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Vendor Details</p>
-                        <h6 class="mb-0">{{ selectedVendor?.companyName }}</h6>
-                        <p class="text-muted small mb-0">
-                            {{ selectedVendor?.firstName }} {{ selectedVendor?.lastName }}<br>
-                            Phone: {{ selectedVendor?.phone }}
-                        </p>
-                    </div>
-                    <div class="col-sm-6 text-right">
-                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Payment Method</p>
-                        <span class="badge badge-info h6">
-                            <i class="fas mr-1" [ngClass]="request.paymentMethod === 'Bank' ? 'fa-university' : 'fa-money-bill-wave'"></i>
-                            {{ request.paymentMethod }}
-                        </span>
-                    </div>
-                </div>
-
-                <table class="table table-sm table-striped border">
-                    <thead class="bg-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Product Description</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-right">Unit Cost</th>
-                            <th class="text-right">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let item of request.items; let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ getProductName(item.productId) }}</td>
-                            <td class="text-center">{{ item.quantity }}</td>
-                            <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
-                            <td class="text-right font-weight-bold">{{ (item.unitCost * item.quantity) | number:'1.2-2' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="row justify-content-end mt-4">
-                    <div class="col-sm-5">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <th class="text-muted">Gross Total:</th>
-                                <td class="text-right font-weight-bold text-dark">{{ request.subTotal | number:'1.2-2' }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Discount:</th>
-                                <td class="text-right text-danger">- {{ request.discount | number:'1.2-2' }}</td>
-                            </tr>
-                            <tr class="border-top">
-                                <th class="h5">Net Total:</th>
-                                <td class="text-right h5 text-primary font-weight-bold">{{ request.totalAmount | number:'1.2-2' }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Amount Paid:</th>
-                                <td class="text-right text-success font-weight-bold">{{ request.paidAmount | number:'1.2-2' }}</td>
-                            </tr>
-                            <tr class="bg-light">
-                                <th>Balance Due:</th>
-                                <td class="text-right text-bold" [ngClass]="(request.totalAmount - request.paidAmount) > 0 ? 'text-danger' : 'text-success'">
-                                    {{ (request.totalAmount - request.paidAmount) | number:'1.2-2' }}
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-outline-secondary px-4" (click)="showConfirmation = false">
-                    <i class="fas fa-edit mr-1"></i> Edit Order
-                </button>
-                <button type="button" class="btn btn-success px-5 shadow" (click)="submitPurchase()">
-                    <i class="fas fa-check-double mr-1"></i> Confirm & Finalize
-                </button>
-            </div>
+      <div class="modal-body p-4" id="invoice-print">
+        <div class="row mb-4">
+          <div class="col-sm-6">
+            <h4 class="text-primary font-weight-bold mb-0">StockoraPOS</h4>
+            <p class="text-muted small">Purchase Order Preview</p>
+          </div>
+          <div class="col-sm-6 text-right">
+            <p class="mb-0"><strong>Date:</strong> {{ purchaseDate | date:'dd/MM/yyyy' }}</p>
+            <p class="mb-0"><strong>Status:</strong> <span class="badge badge-warning">Draft</span></p>
+          </div>
         </div>
+
+        <div class="row mb-4">
+          <div class="col-sm-6">
+            <p class="text-muted text-uppercase small font-weight-bold mb-1">Vendor Details</p>
+            <h6 class="mb-0">{{ selectedVendor?.companyName }}</h6>
+            <p class="text-muted small mb-0">
+              {{ selectedVendor?.firstName }} {{ selectedVendor?.lastName }}<br>
+              Phone: {{ selectedVendor?.phone }}
+            </p>
+          </div>
+          <div class="col-sm-6 text-right">
+            <p class="text-muted text-uppercase small font-weight-bold mb-1">Cash Account</p>
+            <span class="badge badge-info h6">
+              <i class="fas fa-wallet mr-1"></i>
+              {{ request.paymentMethod }}
+            </span>
+          </div>
+        </div>
+
+        <table class="table table-sm table-striped border">
+          <thead class="bg-light">
+            <tr>
+              <th>#</th>
+              <th>Product Description</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Unit Cost</th>
+              <th class="text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of request.items; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ getProductName(item.productId) }}</td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
+              <td class="text-right font-weight-bold">{{ (item.unitCost * item.quantity) | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="row justify-content-end mt-4">
+          <div class="col-sm-5">
+            <table class="table table-sm table-borderless">
+              <tr>
+                <th class="text-muted">Gross Total:</th>
+                <td class="text-right font-weight-bold text-dark">{{ request.subTotal | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Discount:</th>
+                <td class="text-right text-danger">- {{ request.discount | number:'1.2-2' }}</td>
+              </tr>
+              <tr class="border-top">
+                <th class="h5">Net Total:</th>
+                <td class="text-right h5 text-primary font-weight-bold">{{ request.totalAmount | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Amount Paid:</th>
+                <td class="text-right text-success font-weight-bold">{{ request.paidAmount | number:'1.2-2' }}</td>
+              </tr>
+              <tr class="bg-light">
+                <th>Balance Due:</th>
+                <td class="text-right text-bold"
+                  [ngClass]="(request.totalAmount - request.paidAmount) > 0 ? 'text-danger' : 'text-success'">
+                  {{ (request.totalAmount - request.paidAmount) | number:'1.2-2' }}
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light border-0">
+        <button type="button" class="btn btn-outline-secondary px-4" (click)="showConfirmation = false">
+          <i class="fas fa-edit mr-1"></i> Edit Order
+        </button>
+        <button type="button" class="btn btn-success px-5 shadow" (click)="submitPurchase()">
+          <i class="fas fa-check-double mr-1"></i> Confirm & Finalize
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 }

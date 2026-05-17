@@ -1,0 +1,295 @@
+<div class="content-wrapper">
+    @if (toast.show) {
+    <div class="toasts-top-right fixed">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" [ngClass]="'bg-' + toast.type">
+                <i class="{{ toast.icon }} mr-2"></i>
+                <strong class="mr-auto">{{ toast.title }}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">{{ toast.message }}</div>
+        </div>
+    </div>
+    }
+
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold">
+                        <i class="fas fa-receipt mr-2 text-info"></i>Expense Category
+                    </h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <button class="btn btn-info shadow-sm" (click)="openForm()">
+                        <i class="fas fa-plus-circle mr-1"></i> Add New Category
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-receipt"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Categories</span>
+                            <span class="info-box-number text-lg">{{ categories.length }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Active Categories</span>
+                            <span class="info-box-number text-lg">{{ activeCount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-secondary"><i class="fas fa-pause-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Inactive Categories</span>
+                            <span class="info-box-number text-lg">{{ inactiveCount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Search Categories</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control border-left-0"
+                                    placeholder="Name or status..." [(ngModel)]="search" (keyup.enter)="onSearch()">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" (click)="onSearch()">
+                                        <i class="fas fa-search mr-1"></i> Search
+                                    </button>
+                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                        [disabled]="!search">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="filteredCategories.length === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-body p-0">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-info mb-3" role="status"></div>
+                                <p class="text-muted">Loading expense categories...</p>
+                            </div>
+                            }
+
+                            @if (!loading && pagedCategories.length > 0) {
+                            <div class="table-responsive">
+                                <table class="table table-hover table-valign-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="pl-3" style="width: 50px;">#</th>
+                                            <th style="min-width: 220px;">Category</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center pr-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of pagedCategories; track item.id; let i = $index) {
+                                        <tr>
+                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                                                        <i class="fas fa-receipt fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold text-dark">{{ item.name }}</span>
+                                                        <small class="badge badge-light border text-muted">ID: {{ item.id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-success': item.isActive,
+                                                    'badge-secondary': !item.isActive
+                                                }">
+                                                    <i class="fas fa-circle mr-1 small"></i>
+                                                    {{ item.isActive ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center pr-3">
+                                                <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" (click)="edit(item)"
+                                                        title="Edit Category">
+                                                        <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border" (click)="delete(item.id)"
+                                                        title="Delete Category">
+                                                        <i class="fas fa-trash-alt text-danger"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            }
+
+                            @if (!loading && filteredCategories.length === 0) {
+                            <div class="text-center py-5">
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-bold mt-3 mb-0 text-muted">No Expense Categories Found</p>
+                                <small class="text-muted">Add a new category or adjust your search.</small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of
+                                    <b>{{ totalCount }}</b> categories
+                                </div>
+
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="page === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="page >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (showForm) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
+                        <span class="ml-2">{{ isEditMode ? 'Edit Expense Category' : 'Add Expense Category' }}</span>
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeForm()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <form #categoryForm="ngForm">
+                        <div class="card border-0 shadow-sm mb-0">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label font-weight-bold">
+                                        Category Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group shadow-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fas fa-receipt"></i></span>
+                                        </div>
+                                        <input type="text" class="form-control" [(ngModel)]="category.name"
+                                            name="name" #nameField="ngModel"
+                                            [ngClass]="{'is-invalid': nameField.invalid && (nameField.dirty || nameField.touched)}"
+                                            placeholder="Enter category name" required>
+                                    </div>
+                                    @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
+                                    <span class="text-danger small">Please provide a category name.</span>
+                                    }
+                                </div>
+
+                                <label class="form-label d-block">Status</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="expenseCategoryIsActive"
+                                        [(ngModel)]="category.isActive" name="isActive">
+                                    <label class="custom-control-label font-weight-bold" for="expenseCategoryIsActive">
+                                        Active Category
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-white border-0 justify-content-between">
+                    <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
+                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveCategory()"
+                        [disabled]="categoryForm.invalid">
+                        <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Category' : 'Save Category' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+</div>

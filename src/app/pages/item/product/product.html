@@ -1,15 +1,33 @@
 <div class="content-wrapper">
+    @if (toast.show) {
+    <div class="toasts-top-right fixed">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" [ngClass]="'bg-' + toast.type">
+                <i class="{{ toast.icon }} mr-2"></i>
+                <strong class="mr-auto">{{ toast.title }}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                {{ toast.message }}
+            </div>
+        </div>
+    </div>
+    }
+
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Machine Management</h1>
+                    <h1 class="m-0 font-weight-bold">
+                        <i class="fas fa-cogs mr-2 text-info"></i>Machine Management
+                    </h1>
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="#">Master Data</a></li>
-                        <li class="breadcrumb-item active">Machine</li>
-                    </ol>
+                <div class="col-sm-6 text-right">
+                    <button class="btn btn-info shadow-sm" (click)="openForm()">
+                        <i class="fas fa-plus-circle mr-1"></i> Add New Machine
+                    </button>
                 </div>
             </div>
         </div>
@@ -18,156 +36,418 @@
     <section class="content">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-12">
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-cogs"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Machines</span>
+                            <span class="info-box-number text-lg">{{ products.length }}</span>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="card card-info">
-                        <div class="card-header">
-                            <div class="row align-items-center">
-                                <div class="col-sm-6">
-                                    <h3 class="card-title">Machine Details</h3>
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Active Machines</span>
+                            <span class="info-box-number text-lg">{{ activeCount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning text-white"><i class="fas fa-boxes"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Available Stock</span>
+                            <span class="info-box-number text-lg">{{ stockCount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Low Stock</span>
+                            <span class="info-box-number text-lg">{{ lowStockCount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Search Machines</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
                                 </div>
-                                <div class="col-sm-6 mt-2 mt-sm-0">
-                                    <button class="btn btn-light btn-sm float-sm-right" (click)="openForm()">
-                                        <i class="fas fa-plus mr-1"></i> Add New Machine
+                                <input type="text" class="form-control border-left-0"
+                                    placeholder="Name, model, or brand..." [(ngModel)]="search"
+                                    (keyup.enter)="onSearch()">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" (click)="onSearch()">
+                                        <i class="fas fa-search mr-1"></i> Search
+                                    </button>
+                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                        [disabled]="!search && !selectedBrandId">
+                                        <i class="fas fa-undo mr-1"></i> Reset
                                     </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        @if (showForm) {
-                        <div class="card-body border-bottom">
-                            <form #productForm="ngForm">
-                                <div class="row">
-                                    <div class="col-md-6 col-sm-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" [(ngModel)]="product.name" name="name" #nameField="ngModel" [ngClass]="{'is-invalid': nameField.invalid && nameField.touched}" placeholder="Enter Machine Name" required>
-                                            <span *ngIf="nameField.invalid && nameField.touched" class="text-danger small">Name is required.</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6 col-sm-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Model <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" [(ngModel)]="product.model" name="model" #modelField="ngModel" [ngClass]="{'is-invalid': modelField.invalid && modelField.touched}" placeholder="Enter Machine Model" required>
-                                            <span *ngIf="modelField.invalid && modelField.touched" class="text-danger small">Model is required.</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Brand <span class="text-danger">*</span></label>
-                                            <select class="form-control" [(ngModel)]="product.brandId" name="brandId" #brandField="ngModel" [ngClass]="{'is-invalid': brandField.invalid && brandField.touched}" required>
-                                                <option value="" disabled selected>-- Select Brand --</option>
-                                                <option *ngFor="let b of brands" [value]="b.id">{{ b.name }}</option>
-                                            </select>
-                                            <span *ngIf="brandField.invalid && brandField.touched" class="text-danger small">Please select a brand.</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="form-group">
-                                            <label class="form-label">Sale Price</label>
-                                            <input type="number" class="form-control" [(ngModel)]="product.defaultSalePrice" name="salePrice" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="form-group">
-                                            <label class="form-label">Rent Price</label>
-                                            <input type="number" class="form-control" [(ngModel)]="product.defaultRentPrice" name="rentPrice" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Low Stock Warning</label>
-                                            <input type="number" class="form-control" [(ngModel)]="product.lowStockThreshold" name="threshold">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" rows="3" [(ngModel)]="product.description" name="description" placeholder="Enter details..."></textarea>
-                                </div>
-
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="isActive" [(ngModel)]="product.isActive" name="isActive">
-                                    <label class="form-check-label" for="isActive">Active Status</label>
-                                </div>
-
-                                <div class="clearfix">
-                                    <button class="btn btn-success float-right ml-2" (click)="saveProduct()">
-                                        {{ isEditMode ? 'Update' : 'Save' }} Machine
-                                    </button>
-                                    <button type="button" class="btn btn-secondary float-right" (click)="closeForm()">
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Brand</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedBrandId">
+                                <option [value]="''">All Brands</option>
+                                @for (b of brands; track b.id) {
+                                <option [value]="b.id">{{ b.name }}</option>
+                                }
+                            </select>
                         </div>
-                        }
+                    </div>
+                </div>
 
-                        <div class="card-body">
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="filteredProducts.length === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-body p-0">
                             @if (loading) {
                             <div class="text-center p-5">
-                                <div class="spinner-border text-primary"></div>
-                                <p class="mt-2">Loading machine data...</p>
+                                <div class="spinner-border text-info mb-3" role="status"></div>
+                                <p class="text-muted">Loading machine data...</p>
                             </div>
-                            } @if (!loading && products.length > 0) {
+                            }
+
+                            @if (!loading && pagedProducts.length > 0) {
                             <div class="table-responsive">
-                                <table id="brandLoadDataTables" class="table table-bordered table-striped table-hover">
-                                    <thead>
+                                <table id="brandLoadDataTables" class="table table-hover table-valign-middle mb-0">
+                                    <thead class="bg-light">
                                         <tr>
-                                            <th>#</th>
-                                            <th>Name</th>
-                                            <th>Model</th>
-                                            <th>Brand</th>
-                                            <th>Sale</th>
-                                            <th>Rent</th>
-                                            <th>Low Stock</th>
-                                            <th>Status</th>
-                                            <th class="text-center">Action</th>
+                                            <th class="pl-3" style="width: 50px;">#</th>
+                                            <th style="min-width: 220px;">Machine Identity</th>
+                                            <th>Brand & Model</th>
+                                            <th class="text-right">Pricing</th>
+                                            <th class="text-center">Stock</th>
+                                            <th class="text-center pr-3">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @for (item of products; track item.id; let i = $index) {
+                                        @for (item of pagedProducts; track item.id; let i = $index) {
                                         <tr>
-                                            <td>{{ i + 1 }}</td>
-                                            <td><strong>{{ item.name }}</strong></td>
-                                            <td>{{ item.model }}</td>
-                                            <td>{{ item.brandName || '-' }}</td>
-                                            <td>{{ item.defaultSalePrice | number:'1.2-2' }}</td>
-                                            <td>{{ item.defaultRentPrice | number:'1.2-2' }}</td>
-                                            <td>{{ item.lowStockThreshold }}</td>
+                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
                                             <td>
-                                                <span class="badge" [ngClass]="item.isActive ? 'badge-success' : 'badge-danger'">
-                                                    {{ item.isActive ? 'Active' : 'Inactive' }}
-                                                </span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                                                        <i class="fas fa-cog fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold text-dark">{{ item.name
+                                                            }}</span>
+                                                        <small class="badge badge-light border text-muted">ID: {{
+                                                            item.id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="font-weight-bold d-block text-sm">{{ item.brandName || '-'
+                                                    }}</span>
+                                                <span class="text-muted text-xs">{{ item.model }}</span>
+                                            </td>
+                                            <td class="text-right">
+                                                <div class="text-sm">
+                                                    <span class="text-muted">Sale:</span>
+                                                    <span class="text-primary">{{ item.defaultSalePrice |
+                                                        number:'1.2-2' }}</span><br>
+                                                    <span class="text-muted">Rent:</span> {{ item.defaultRentPrice |
+                                                    number:'1.2-2' }}
+                                                </div>
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-xs btn-primary" (click)="edit(item)">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </button>
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-danger': item.inStock <= item.lowStockThreshold,
+                                                    'badge-success': item.inStock > item.lowStockThreshold
+                                                }">
+                                                    {{ item.inStock }} in stock || {{ item.inRent }} rented
+                                                </span>
+                                                <small class="d-block text-muted mt-1">Low at {{
+                                                    item.lowStockThreshold }}</small>
+                                            </td>
+                                            <!-- <td class="text-center">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
+                                                    'badge-success': item.isActive,
+                                                    'badge-secondary': !item.isActive
+                                                }">
+                                                    <i class="fas fa-circle mr-1 small"></i>
+                                                    {{ item.isActive ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td> -->
+                                            <td class="text-center pr-3">
+                                                <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" (click)="edit(item)"
+                                                        title="Edit Machine">
+                                                        <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border" (click)="delete(item.id)"
+                                                        title="Delete Machine">
+                                                        <i class="fas fa-trash-alt text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         }
                                     </tbody>
                                 </table>
                             </div>
-                            } @if (!loading && products.length === 0) {
-                            <div class="alert alert-light text-center p-5">
+                            }
+
+                            @if (!loading && filteredProducts.length === 0) {
+                            <div class="text-center py-5">
                                 <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                                <p>No machine records found. Click "Add New Machine" to begin.</p>
+                                <p class="text-bold mt-3 mb-0 text-muted">No Machines Found</p>
+                                <small class="text-muted">Add a new machine or adjust your filters.</small>
                             </div>
                             }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of
+                                    <b>{{ totalCount }}</b> machines
+                                </div>
+
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="page === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="page >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    @if (showForm) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
+                        <span class="ml-2">{{ isEditMode ? 'Edit Machine Details' : 'Register New Machine' }}</span>
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeForm()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <form #productForm="ngForm">
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Machine Name <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-cog"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control" [(ngModel)]="product.name"
+                                                    name="name" #nameField="ngModel"
+                                                    [ngClass]="{'is-invalid': nameField.invalid && nameField.touched}"
+                                                    placeholder="Enter Machine Name" required>
+                                            </div>
+                                            @if (nameField.invalid && nameField.touched) {
+                                            <span class="text-danger small">Name is required.</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Model <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-microchip"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control" [(ngModel)]="product.model"
+                                                    name="model" #modelField="ngModel"
+                                                    [ngClass]="{'is-invalid': modelField.invalid && modelField.touched}"
+                                                    placeholder="Enter Machine Model" required>
+                                            </div>
+                                            @if (modelField.invalid && modelField.touched) {
+                                            <span class="text-danger small">Model is required.</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Brand <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-control shadow-sm" [(ngModel)]="product.brandId"
+                                                name="brandId" #brandField="ngModel"
+                                                [ngClass]="{'is-invalid': brandField.invalid && brandField.touched}"
+                                                required>
+                                                <option [value]="null" disabled>-- Select Brand --</option>
+                                                @for (b of brands; track b.id) {
+                                                <option [value]="b.id">{{ b.name }}</option>
+                                                }
+                                            </select>
+                                            @if (brandField.invalid && brandField.touched) {
+                                            <span class="text-danger small">Please select a brand.</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Sale Price</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="product.defaultSalePrice" name="salePrice" step="0.01"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Rent Price</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="product.defaultRentPrice" name="rentPrice" step="0.01"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label">Low Stock Warning</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-level-down-alt"></i></span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="product.lowStockThreshold" name="threshold"
+                                                    placeholder="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-label">Description</label>
+                                            <textarea class="form-control shadow-sm" rows="3"
+                                                [(ngModel)]="product.description" name="description"
+                                                placeholder="Enter details..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label d-block">Status</label>
+                                        <div class="custom-control custom-switch mt-2">
+                                            <input type="checkbox" class="custom-control-input" id="isActiveModal"
+                                                [(ngModel)]="product.isActive" name="isActive">
+                                            <label class="custom-control-label font-weight-bold" for="isActiveModal">
+                                                Active Machine
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">
+                                            {{ product.isActive ? 'Machine is available for use.' : 'Machine is marked inactive.' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-white border-0 justify-content-between">
+                    <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
+                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveProduct()"
+                        [disabled]="productForm.invalid">
+                        <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Machine' : 'Save Machine' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
 </div>

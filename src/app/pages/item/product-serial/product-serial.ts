@@ -5,8 +5,11 @@ import { ProductService, Product } from '../../../service/item/product.service';
 import { ProductSerialService, ProductSerialDto, ProductSerialStatus } from '../../../service/item/product-serial.service';
 import { ProductSerialImage, ProductSerialImageService } from '../../../service/item/product-serial-image.service';
 import { environmentImageUrl } from '../../../../environments/environment';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 declare var $: any;
+
+type ToastType = 'success' | 'danger' | 'warning' | 'info';
 
 @Component({
   selector: 'app-product-serial',
@@ -22,6 +25,14 @@ export class ProductSerialComponent implements OnInit {
   pageSize: number = 10;
   totalCount: number = 0;
   search: string = '';
+  selectedStatusId = '';
+  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+    icon: 'fas fa-check-circle'
+  };
 
   serials: ProductSerialDto[] = [];
   serialStatus: ProductSerialStatus[] = [];
@@ -36,6 +47,7 @@ export class ProductSerialComponent implements OnInit {
   selectedSerial: any = null;
 
   serial: any = this.resetSerialObject();
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private productService: ProductService, // Inject services
@@ -51,7 +63,12 @@ export class ProductSerialComponent implements OnInit {
 
   loadSerials() {
     this.loading = true;
-    this.serialService.getSerials(this.page, this.pageSize, this.search).subscribe({
+    this.serialService.getSerials(
+      this.page,
+      this.pageSize,
+      this.search,
+      this.selectedStatusId ? Number(this.selectedStatusId) : undefined
+    ).subscribe({
       next: (res) => {
         this.serials = res.items;
         this.totalCount = res.totalCount;
@@ -61,17 +78,223 @@ export class ProductSerialComponent implements OnInit {
       error: (err) => {
         console.error('Error loading serials', err);
         this.loading = false;
+        this.showToast('danger', 'Load Failed', 'Unable to load serial inventory.');
       }
     });
   }
 
   onPageChange(newPage: number) {
+    if (newPage < 1 || newPage > this.totalPages) return;
+
     this.page = newPage;
     this.loadSerials();
   }
 
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
+  }
+
+  get pageStart(): number {
+    return this.totalCount === 0 ? 0 : ((Math.min(this.page, this.totalPages) - 1) * this.pageSize) + 1;
+  }
+
+  get pageEnd(): number {
+    return Math.min(Math.min(this.page, this.totalPages) * this.pageSize, this.totalCount);
+  }
+
+  get linkedCount(): number {
+    return this.serials.filter((item) => item.isSerialNumberLinkToProduct).length;
+  }
+
+  get unlinkedCount(): number {
+    return this.serials.filter((item) => !item.isSerialNumberLinkToProduct).length;
+  }
+
+  get inRentCount(): number {
+    return this.serials.filter((item) => item.status === 'InRent').length;
+  }
+
+  selectedItem: any = null;
+
+  printQr(item: any) {
+
+    const printContents = `
+    <html>
+      <head>
+        <title>Print QR</title>
+
+        <style>
+
+          body{
+            text-align:center;
+            font-family:Arial;
+            padding-top:20px;
+          }
+
+          .serial{
+            margin-top:10px;
+            font-size:16px;
+            font-weight:bold;
+          }
+
+        </style>
+      </head>
+
+      <body>
+
+        <img
+          src="${this.getQrImage(item.serialNumber)}"
+          width="200"
+        />
+
+        <div class="serial">
+          ${item.serialNumber}
+        </div>
+
+      </body>
+    </html>
+  `;
+
+    const popupWin = window.open('', '_blank', 'width=600,height=600');
+
+    popupWin?.document.open();
+    popupWin?.document.write(printContents);
+    popupWin?.document.close();
+
+    popupWin?.focus();
+
+    setTimeout(() => {
+
+      popupWin?.print();
+      popupWin?.close();
+
+    }, 500);
+
+  }
+
+  printAllQr() {
+    if (this.serials.length === 0) {
+      this.showToast('info', 'No QR Codes', 'There are no serials on this page to print.');
+      return;
+    }
+
+    let labelsHtml = '';
+
+    for (const item of this.serials) {
+      const qrImage = this.getQrImage(item.serialNumber);
+
+      labelsHtml += `
+      <div class="label">
+
+          <img src="${qrImage}" width="120" />
+
+          <div class="serial">
+              ${item.serialNumber}
+          </div>
+
+      </div>
+    `;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=1000,height=800');
+
+    const html = `
+    <html>
+
+      <head>
+
+        <title>Print All QR Codes</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          .container{
+            display:flex;
+            flex-wrap:wrap;
+          }
+
+          .label{
+            width:220px;
+            height:220px;
+
+            border:1px solid #ddd;
+
+            margin:10px;
+            padding:10px;
+
+            text-align:center;
+
+            page-break-inside:avoid;
+          }
+
+          .serial{
+            margin-top:10px;
+            font-size:14px;
+            font-weight:bold;
+
+            word-break:break-all;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <div class="container">
+          ${labelsHtml}
+        </div>
+
+        <script>
+          const images = Array.from(document.images);
+
+          Promise.all(images.map((image) => {
+            if (image.complete && image.naturalWidth > 0) {
+              return Promise.resolve();
+            }
+
+            if (image.decode) {
+              return image.decode().catch(() => undefined);
+            }
+
+            return new Promise((resolve) => {
+              image.onload = resolve;
+              image.onerror = resolve;
+            });
+          })).then(() => {
+            window.focus();
+            window.print();
+            window.close();
+          });
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+    printWindow?.document.open();
+    printWindow?.document.write(html);
+    printWindow?.document.close();
+
+  }
+  getQrImage(serial: string): string {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(serial)}`;
+  }
+
   onSearch() {
     this.page = 1; // Reset to page 1 for search
+    this.loadSerials();
+  }
+
+  resetFilters() {
+    this.search = '';
+    this.selectedStatusId = '';
+    this.page = 1;
     this.loadSerials();
   }
 
@@ -108,6 +331,7 @@ export class ProductSerialComponent implements OnInit {
     this.newImage = { title: '' };
     this.selectedFile = null;
     this.selectedFileName = '';
+    this.imagePreview = null;
 
     //this.loadGalleryImages(item.id);
 
@@ -175,18 +399,31 @@ export class ProductSerialComponent implements OnInit {
   }
 
   saveSerial() {
-    if (!this.serial.productId) return;
+    if (!this.serial.productId) {
+      this.showToast('warning', 'Validation Error', 'Please select a target product.');
+      return;
+    }
+
+    if (this.serial.isOpeningStock && !this.serial.legacySerial?.trim()) {
+      this.showToast('warning', 'Validation Error', 'Legacy serial number is required for opening stock.');
+      return;
+    }
 
     const request = (this.isEditMode && this.selectedId)
       ? this.serialService.update(this.selectedId, this.serial)
       : this.serialService.create(this.serial);
+    const message = this.isEditMode ? 'Machine unit updated successfully.' : 'Machine unit generated successfully.';
 
     request.subscribe({
       next: () => {
         this.closeForm();
         this.loadSerials();
+        this.showToast('success', 'Success', message);
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        console.error(err);
+        this.showToast('danger', 'Save Failed', 'Unable to save the serial unit. Please try again.');
+      }
     });
   }
 
@@ -197,6 +434,12 @@ export class ProductSerialComponent implements OnInit {
     this.showForm = true;
   }
 
+  onOpeningStockChange(isOpeningStock: boolean) {
+    if (!isOpeningStock) {
+      this.serial.legacySerial = '';
+    }
+  }
+
   resetSerialObject() {
     return {
       serialNumber: '',
@@ -204,7 +447,10 @@ export class ProductSerialComponent implements OnInit {
       status: 'Available',
       purchaseCost: 0,
       sellingCost: 0,
-      rentalCost: 0
+      rentalCost: 0,
+      legacySerial: '',
+      isOpeningStock: false,
+      note: ''
     };
   }
 
@@ -229,19 +475,26 @@ export class ProductSerialComponent implements OnInit {
   imageBaseUrl = environmentImageUrl.apiUrl; // Set accordingly
   uploading = false;
   selectedFileName = '';
-  imagePreview: string | ArrayBuffer | null = null;
+  imagePreview: string | null = null;
 
   deleteImage(id: number) {
     if (!confirm('Delete this image?')) return;
 
-    this.productSerialImageService.delete(id).subscribe(() => {
-      this.loadGalleryImages(this.productSerialId);
+    this.productSerialImageService.delete(id).subscribe({
+      next: () => {
+        this.loadGalleryImages(this.productSerialId);
+        this.showToast('success', 'Deleted', 'Gallery image deleted successfully.');
+      },
+      error: (err) => {
+        console.error('Error deleting image', err);
+        this.showToast('danger', 'Delete Failed', 'Unable to delete the image.');
+      }
     });
   }
 
-  onFileSelected(event: any) {
-
-    const file = event.target.files?.[0];
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
 
     this.selectedFile = file;
@@ -249,8 +502,8 @@ export class ProductSerialComponent implements OnInit {
 
     const reader = new FileReader();
     reader.onload = () => {
-      this.linkImagePreview = reader.result as string;
-      this.cdr.detectChanges(); // 🔥 FORCE UI UPDATE
+      this.imagePreview = reader.result as string;
+      this.cdr.detectChanges();
     };
 
     reader.readAsDataURL(file);
@@ -269,16 +522,18 @@ export class ProductSerialComponent implements OnInit {
       next: (res) => {
         this.images.push(res);
         this.resetUploadForm();
-      
+
         if (form) {
           form.resetForm();
         }
         this.uploading = false;
         this.loadGalleryImages(this.productSerialId); // Reload to correctly align data
         this.cdr.detectChanges();
+        this.showToast('success', 'Uploaded', 'Gallery image uploaded successfully.');
       },
       error: () => {
         this.uploading = false;
+        this.showToast('danger', 'Upload Failed', 'Unable to upload the image.');
       }
     });
   }
@@ -287,6 +542,12 @@ export class ProductSerialComponent implements OnInit {
     this.selectedFile = null;
     this.selectedFileName = '';
     this.newImage.title = '';
+    this.imagePreview = null;
+
+    const fileInput = document.getElementById('galleryFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   removeLinkedImage(serialId: number) {
@@ -296,8 +557,12 @@ export class ProductSerialComponent implements OnInit {
         if (this.selectedSerial && this.selectedSerial.id === serialId) {
           this.selectedSerial.machineImageUrl = null;
         }
+        this.showToast('success', 'Unlinked', 'Primary machine photo removed.');
       },
-      error: (err) => console.error('Error unlinking image', err)
+      error: (err) => {
+        console.error('Error unlinking image', err);
+        this.showToast('danger', 'Unlink Failed', 'Unable to remove the linked photo.');
+      }
     });
   }
 
@@ -306,7 +571,7 @@ export class ProductSerialComponent implements OnInit {
   selectedLinkFile: File | null = null;
   selectedLinkFileName: string = '';
   newLinkTitle: string = '';
-  linkImagePreview: string | ArrayBuffer | null = null;
+  linkImagePreview: string | null = null;
 
   triggerLinkImageModal() {
     // 1. Hide the parent gallery modal
@@ -317,23 +582,26 @@ export class ProductSerialComponent implements OnInit {
     this.selectedLinkFile = null;
     this.selectedLinkFileName = '';
     this.newLinkTitle = '';
+    this.linkImagePreview = null;
 
     // 3. Display the linkage modal
     $('#linkImageModal').modal('show');
   }
 
-  onLinkFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedLinkFile = file;
-      this.selectedLinkFileName = file.name;
+  onLinkFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.linkImagePreview = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
+    this.selectedLinkFile = file;
+    this.selectedLinkFileName = file.name;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.linkImagePreview = reader.result as string;
+      this.cdr.detectChanges();
+    };
+    reader.readAsDataURL(file);
   }
 
   removeLinkPreview() {
@@ -365,9 +633,11 @@ export class ProductSerialComponent implements OnInit {
           next: () => {
             $('#linkImageModal').modal('hide');
             this.loadSerials();
+            this.showToast('success', 'Linked', 'Machine photo linked successfully.');
           },
           error: err => {
             console.log('ERROR:', err.error);
+            this.showToast('danger', 'Link Failed', 'Unable to link the machine photo.');
           }
         });
 
@@ -391,10 +661,45 @@ export class ProductSerialComponent implements OnInit {
         next: () => {
           $('#linkImageModal').modal('hide');
           this.loadGalleryImages(this.selectedSerial.id);
+          this.showToast('success', 'Linked', 'Machine photo linked successfully.');
         },
         error: err => {
           console.log('ERROR:', err.error);
+          this.showToast('danger', 'Link Failed', 'Unable to link the machine photo.');
         }
       });
+  }
+
+  showToast(type: ToastType, title: string, message: string) {
+    const icons: Record<ToastType, string> = {
+      success: 'fas fa-check-circle',
+      danger: 'fas fa-times-circle',
+      warning: 'fas fa-exclamation-triangle',
+      info: 'fas fa-info-circle'
+    };
+
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+
+    this.toast = {
+      show: true,
+      type,
+      title,
+      message,
+      icon: icons[type]
+    };
+
+    this.toastTimer = setTimeout(() => {
+      this.closeToast();
+    }, 3500);
+  }
+
+  closeToast() {
+    this.toast.show = false;
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+      this.toastTimer = null;
+    }
   }
 }

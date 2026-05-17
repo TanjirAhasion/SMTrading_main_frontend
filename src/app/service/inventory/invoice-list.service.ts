@@ -1,53 +1,104 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-export interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  invoiceDate: Date;
-  customerName: string;
-  status: 'Paid' | 'Pending' | 'Overdue';
-  totalAmount: number;
+export interface SalesInvoiceItemDto {
+    id: number;
+    productName: string;
+    model: string;
+    brandName: string;
+    quantity: number;
+    unitPrice: number;
+    serialNumbers: string[];
+}
+
+export interface SalesInvoiceDto {
+    id: string | number;
+    invoiceNumber: string;
+    saleDate: Date | string; // Dates often arrive as ISO strings from JSON
+    subTotal: number;
+    discount: number;
+    isPaid: boolean;
+    customerFullName: string;
+    companyName: string;
+    paidAmount: number;
+    paymentMethod: string;
+    invoiceItems: SalesInvoiceItemDto[];
+}
+
+export interface SaleItem {
+    id: string | number;
+    invoiceNumber: string;
+    saleDate: Date | string;
+    subTotal: number;
+    discount: number;
+    isPaid: boolean;
+    customerId: number;
+    firstName: string;
+    lastName: string;
+    companyName: string;
+    paidAmount: number;
+    paymentMethod: string;
+    status: string;
+    totalAmount?: number;
+    invoiceItems?: SalesInvoiceItemDto[];
+    customerFullName?: string;
+}
+
+export interface SearchSalesDto {
+    searchText?: string;
+    startDate?: string;
+    endDate?: string;
+    companyName?: string;
+    customerId?: string;
+    pageNumber: number;
+    pageSize: number;
+}
+
+export interface PagedResult<T> {
+    items: T[];
+    totalCount: number;
 }
 
 @Injectable({ providedIn: 'root' })
 
 export class InvoiceService {
-  private apiUrl = 'https://api.yourdomain.com/api/invoices'; // Replace with your actual API endpoint
+    private apiUrl = `${environment.apiUrl}/sales`;
+    private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+    GetAllBySearchWithPagination(
+        searchDto: SearchSalesDto
+    ): Observable<PagedResult<SaleItem>> {
 
-  // Fetch paginated and filtered invoices from backend
-  getInvoices(params: any): Observable<{ data: Invoice[]; totalCount: number }> {
-    let httpParams = new HttpParams()
-      .set('page', params.page || 1)
-      .set('pageSize', params.pageSize || 10);
+        let params = new HttpParams();
 
-    if (params.search) httpParams = httpParams.set('search', params.search);
-    if (params.startDate) httpParams = httpParams.set('startDate', params.startDate);
-    if (params.endDate) httpParams = httpParams.set('endDate', params.endDate);
-    if (params.customerName) httpParams = httpParams.set('customerName', params.customerName);
-    if (params.status) httpParams = httpParams.set('status', params.status);
+        if (searchDto.searchText) {
+            params = params.set('searchText', searchDto.searchText);
+        }
+        if (searchDto.startDate) {
+            params = params.set('startDate', searchDto.startDate);
+        }
+        if (searchDto.endDate) {
+            params = params.set('endDate', searchDto.endDate);
+        }
+        if (searchDto.companyName) {
+            params = params.set('companyName', searchDto.companyName);
+        }
+        if (searchDto.customerId) {
+            params = params.set('customerId', searchDto.customerId);
+        }
 
-    // Example using HttpClient: return this.http.get<{ data: Invoice[]; totalCount: number }>(this.apiUrl, { params: httpParams });
+        params = params.set('pageNumber', searchDto.pageNumber.toString());
+        params = params.set('pageSize', searchDto.pageSize.toString());
 
-    // Mock response for demonstration
-    const dummyInvoices: Invoice[] = [
-      { id: '101', invoiceNumber: 'INV-2026-001', invoiceDate: new Date('2026-04-22'), customerName: 'TechCorp Solutions', status: 'Paid', totalAmount: 1500.00 },
-      { id: '102', invoiceNumber: 'INV-2026-002', invoiceDate: new Date('2026-04-25'), customerName: 'Logix Retail', status: 'Pending', totalAmount: 350.50 },
-      { id: '103', invoiceNumber: 'INV-2026-003', invoiceDate: new Date('2026-04-28'), customerName: 'Alpha Builders', status: 'Overdue', totalAmount: 2800.00 },
-    ];
+        return this.http.get<PagedResult<SaleItem>>(
+            `${this.apiUrl}/GetAllBySearchWithPagination`,
+            { params }
+        );
+    }
 
-    return of({
-      data: dummyInvoices,
-      totalCount: dummyInvoices.length
-    });
-  }
-
-  deleteInvoice(id: string): Observable<any> {
-    // return this.http.delete(`${this.apiUrl}/${id}`);
-    return of({ success: true });
-  }
+    getById(id: string | number): Observable<SalesInvoiceDto> {
+        return this.http.get<SalesInvoiceDto>(`${this.apiUrl}/${id}`);
+    }
 }

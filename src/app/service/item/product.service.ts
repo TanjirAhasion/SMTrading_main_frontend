@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -13,6 +13,8 @@ export interface Product {
   defaultSalePrice: number; // Decimal in .NET
   defaultRentPrice: number; // Decimal in .NET
   lowStockThreshold: number;
+  inStock: number;
+  inRent: number;
   description: string;
   isActive: boolean;
 }
@@ -29,6 +31,22 @@ export class ProductService {
   getAll(): Observable<Product[]> {
     return this.http.get<Product[]>(this.apiUrl);
   }
+
+  getWithStock(page: number, size: number, search: string = '', status?: number) {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    if (search) {
+      params = params.set('search', search);
+    }
+    
+    if (status !== undefined) {
+      params = params.set('status', status.toString());
+    }
+    return this.http.get<any>(`${this.apiUrl}/GetAllBySearchWithPagination`, { params });
+  }
+
 
   getById(id: number): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);

@@ -2,7 +2,12 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrandService } from '../../../service/item/brand.service';
+import { PdfService } from '../../../service/common/pdf.service';
+import { ExcelService } from '../../../service/common/excel.service';
+import { PrintService } from '../../../service/common/print.service';
 import Swal from 'sweetalert2';
+
+type ToastType = 'success' | 'danger' | 'warning' | 'info';
 
 @Component({
   selector: 'app-brand',
@@ -15,8 +20,20 @@ import Swal from 'sweetalert2';
 export class Brand {
 
   brands: any[] = [];
+  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+    icon: 'fas fa-check-circle'
+  };
+  
   showForm = false;
   loading = false;
+  search = '';
+  page = 1;
+  pageSize = 10;
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   isEditMode = false;
   selectedId: number | null = null;
@@ -28,12 +45,60 @@ export class Brand {
     isActive: true
   };
 
-  constructor(private brandService: BrandService, private cdr: ChangeDetectorRef) {
+  constructor(
+    private brandService: BrandService,
+    private pdfService: PdfService,
+    private excelService: ExcelService,
+    private printService: PrintService,
+    private cdr: ChangeDetectorRef
+  ) {
 
   }
 
   ngOnInit(): void {
     this.loadBrands();
+  }
+
+  get filteredBrands(): any[] {
+    const term = this.search.trim().toLowerCase();
+
+    if (!term) return this.brands;
+
+    return this.brands.filter((item) =>
+      item.name?.toLowerCase().includes(term)
+      || item.description?.toLowerCase().includes(term)
+    );
+  }
+
+  get totalCount(): number {
+    return this.filteredBrands.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
+  }
+
+  get pagedBrands(): any[] {
+    const currentPage = Math.min(this.page, this.totalPages);
+    const start = (currentPage - 1) * this.pageSize;
+
+    return this.filteredBrands.slice(start, start + this.pageSize);
+  }
+
+  get pageStart(): number {
+    return this.totalCount === 0 ? 0 : ((Math.min(this.page, this.totalPages) - 1) * this.pageSize) + 1;
+  }
+
+  get pageEnd(): number {
+    return Math.min(Math.min(this.page, this.totalPages) * this.pageSize, this.totalCount);
+  }
+
+  get activeCount(): number {
+    return this.brands.filter((item) => item.isActive).length;
+  }
+
+  get inactiveCount(): number {
+    return this.brands.filter((item) => !item.isActive).length;
   }
 
   loadBrands() {
@@ -42,6 +107,7 @@ export class Brand {
       next: (res) => {
 
         this.brands = [...res];
+        this.page = Math.min(this.page, this.totalPages);
         this.loading = false;
 
         this.cdr.detectChanges(); // 🔥 FORCE UI REFRESH
@@ -56,6 +122,63 @@ export class Brand {
   openForm() {
     this.resetForm();
     this.showForm = true;
+  }
+
+  onSearch() {
+    this.page = 1;
+  }
+
+  resetFilters() {
+    this.search = '';
+    this.page = 1;
+  }
+
+  onPageChange(newPage: number) {
+    if (newPage < 1 || newPage > this.totalPages) return;
+
+    this.page = newPage;
+  }
+
+  downloadExcel() {
+    const rows = this.filteredBrands.map((x, index) => ({
+      SL: index + 1,
+      Name: x.name,
+      Description: x.description || '-',
+      Status: x.isActive ? 'Active' : 'Inactive'
+    }));
+
+    this.excelService.exportToExcel(rows, 'brand-report');
+  }
+
+  downloadPdf() {
+    const columns = [
+      { header: 'SL', field: 'sl' },
+      { header: 'Name', field: 'name' },
+      { header: 'Description', field: 'description' },
+      { header: 'Status', field: 'status' }
+    ];
+
+    const rows = this.filteredBrands.map((x, index) => ({
+      sl: index + 1,
+      name: x.name,
+      description: x.description || '-',
+      status: x.isActive ? 'Active' : 'Inactive'
+    }));
+
+    this.pdfService.downloadTablePdf('Brand Report', columns, rows, 'brands.pdf');
+  }
+
+  printReport() {
+    this.printService.printReport({
+      title: 'Brand Report',
+      data: this.filteredBrands,
+      columns: [
+        { header: 'SL', value: (_x, index) => String(index + 1), align: 'center' },
+        { header: 'Name', value: x => x.name || '-' },
+        { header: 'Description', value: x => x.description || '-' },
+        { header: 'Status', value: x => x.isActive ? 'Active' : 'Inactive', align: 'center' }
+      ]
+    });
   }
 
   closeForm() {
@@ -79,6 +202,8 @@ export class Brand {
   saveBrand() {
 
     if (!this.brand.name || this.brand.name.trim() === '') {
+      this.showToast('warning', 'Validation Error', 'Brand name is required.');
+
       // If using SweetAlert2 (Standard in AdminLTE)
       Swal.fire({
         icon: 'error',
@@ -93,41 +218,57 @@ export class Brand {
     }
 
     if (this.isEditMode && this.selectedId) {
+      const message = 'Brand updated successfully.';
 
       // UPDATE
       this.brandService.update(this.selectedId, this.brand).subscribe({
         next: () => {
-          this.afterSave();
+          this.afterSave(message);
 
         },
-        error: err => console.log(err)
+        error: err => {
+          console.log(err);
+          this.showToast('danger', 'Update Failed', 'Unable to update the brand. Please try again.');
+        }
       });
 
     }
     else {
+      const message = 'Brand added successfully.';
 
       // CREATE
       this.brandService.create(this.brand).subscribe({
         next: () => {
-          this.afterSave();
+          this.afterSave(message);
         },
-        error: err => console.log(err)
+        error: err => {
+          console.log(err);
+          this.showToast('danger', 'Save Failed', 'Unable to add the brand. Please try again.');
+        }
       });
     }
   }
 
   delete(id: number) {
     if (confirm('Delete this brand?')) {
-      this.brandService.delete(id).subscribe(() => {
-        this.loadBrands();
+      this.brandService.delete(id).subscribe({
+        next: () => {
+          this.loadBrands();
+          this.showToast('success', 'Deleted', 'Brand deleted successfully.');
+        },
+        error: err => {
+          console.log(err);
+          this.showToast('danger', 'Delete Failed', 'Unable to delete the brand. Please try again.');
+        }
       });
     }
   }
 
-  afterSave() {
+  afterSave(message: string) {
     this.loadBrands();
     this.resetForm();
     this.showForm = false;
+    this.showToast('success', 'Success', message);
   }
 
   resetForm() {
@@ -140,5 +281,38 @@ export class Brand {
       logoUrl: '',
       isActive: true
     };
+  }
+
+  showToast(type: ToastType, title: string, message: string) {
+    const icons: Record<ToastType, string> = {
+      success: 'fas fa-check-circle',
+      danger: 'fas fa-times-circle',
+      warning: 'fas fa-exclamation-triangle',
+      info: 'fas fa-info-circle'
+    };
+
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+
+    this.toast = {
+      show: true,
+      type,
+      title,
+      message,
+      icon: icons[type]
+    };
+
+    this.toastTimer = setTimeout(() => {
+      this.closeToast();
+    }, 3500);
+  }
+
+  closeToast() {
+    this.toast.show = false;
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+      this.toastTimer = null;
+    }
   }
 }

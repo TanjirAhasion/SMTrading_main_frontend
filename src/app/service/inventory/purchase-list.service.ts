@@ -3,10 +3,34 @@ import { environment } from "../../../environments/environment";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 
-export interface PurchaseItem {
-    id: string;
+export interface PurchaseInvoiceItemDto {
+    id: number;
+    productName: string;
+    model: string;
+    brandName: string;
+    quantity: number;
+    unitCost: number;
+    productSerialNumber: string[];
+}
+
+export interface PurchaseInvoiceDto {
+    id: string | number;
     purchaseNumber: string;
-    purchaseDate: Date;
+    purchaseDate: Date | string; // Use string if the API returns an ISO date string
+    subTotal: number;
+    discount: number;
+    isPaid: boolean;
+    vendorFullName: string;
+    companyName: string;
+    paidAmount: number;
+    paymentMethod: string;
+    invoiceItems: PurchaseInvoiceItemDto[];
+}
+
+export interface PurchaseItem {
+    id: string | number;
+    purchaseNumber: string;
+    purchaseDate: Date | string;
     subTotal: number;
     discount: number;
     isPaid: boolean;
@@ -14,10 +38,28 @@ export interface PurchaseItem {
     firstName: string;
     lastName: string;
     companyName: string;
-    amount: number,
+    amount?: number;
+    paidAmount?: number;
     paymentMethod: string;
     status: string;
-    totalAmount: number;
+    totalAmount?: number;
+    items?: PurchaseDetailItem[];
+    purchaseItems?: PurchaseDetailItem[];
+    invoiceItems?: PurchaseInvoiceItemDto[];
+    vendorFullName?: string;
+}
+
+export interface PurchaseDetailItem {
+    id?: number;
+    productName?: string;
+    name?: string;
+    model?: string;
+    brandName?: string;
+    quantity: number;
+    unitCost: number;
+    totalAmount?: number;
+    subTotal?: number;
+    productSerialNumber?: string[];
 }
 
 export interface SearchPurchaseDto {
@@ -72,5 +114,9 @@ export class PurchaseListService {
             `${this.apiUrl}/GetAllBySearchWithPagination`,
             { params }
         );
+    }
+
+    getById(id: string | number): Observable<PurchaseInvoiceDto> {
+        return this.http.get<PurchaseInvoiceDto>(`${this.apiUrl}/${id}`);
     }
 }

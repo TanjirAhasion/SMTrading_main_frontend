@@ -24,6 +24,9 @@ export interface CreateProductSerialDto {
   purchaseCost: number;
   sellingCost: number;
   rentalCost: number;
+  legacySerial?: string; 
+  isOpeningStock: boolean;
+  note?: string;
 }
 
 export interface UpdateProductSerialDto {
@@ -34,6 +37,9 @@ export interface UpdateProductSerialDto {
   purchaseCost: number;
   sellingCost: number;
   rentalCost: number;
+  legacySerial?: string; 
+  isOpeningStock: boolean; // Optional property to indicate if the serial number is part of the opening stock
+  note?: string; // Optional property for any additional notes about the product serial number
 }
 
 export interface UpdateProductSerialLinkedDto {
@@ -46,6 +52,10 @@ export interface ProductSerialStatus {
   id: number;
   name: string;
 }
+
+@Injectable({
+  providedIn: 'root'
+})
 
 export class ProductSerialService {
   private apiUrl = `${environment.apiUrl}/productserials`;
@@ -89,7 +99,7 @@ export class ProductSerialService {
     return this.http.get<ProductSerialStatus[]>(`${this.apiUrl}/productSerialStatuses`);
   }
 
-  getSerials(page: number, size: number, search: string = '') {
+  getSerials(page: number, size: number, search: string = '', status?: number) {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
@@ -97,7 +107,10 @@ export class ProductSerialService {
     if (search) {
       params = params.set('search', search);
     }
-
+    
+    if (status !== undefined) {
+      params = params.set('status', status.toString());
+    }
     return this.http.get<any>(`${this.apiUrl}/GetAllBySearchWithPagination`, { params });
   }
 }

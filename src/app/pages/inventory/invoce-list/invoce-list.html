@@ -7,7 +7,7 @@
                 </div>
                 <div class="col-sm-6 text-right">
                     <button class="btn btn-info shadow-sm" (click)="createNewInvoice()">
-                        <i class="fas fa-plus-circle mr-1"></i> New Invoice
+                        <i class="fas fa-plus-circle mr-1"></i> New Sales Invoice
                     </button>
                 </div>
             </div>
@@ -48,7 +48,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-3 col-sm-6 mb-2">
+                <div class="col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Invoice Number</label>
@@ -60,7 +60,12 @@
                                 </div>
                                 <input type="text" class="form-control border-left-0"
                                     placeholder="Search Invoice..." [(ngModel)]="searchQuery"
-                                    (ngModelChange)="applyFilters()">
+                                    (keyup.enter)="applyFilters()">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                        <i class="fas fa-search mr-1"></i> Search
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -89,11 +94,11 @@
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Customer</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomer"
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId"
                                 (ngModelChange)="applyFilters()">
                                 <option [value]="''">All Customers</option>
-                                @for (c of customers; track c) {
-                                <option [value]="c">{{ c }}</option>
+                                @for (c of customers; track c.id) {
+                                <option [value]="c.id">{{ c.name }}</option>
                                 }
                             </select>
                         </div>
@@ -115,10 +120,43 @@
                     </div>
                 </div>
 
-                <div class="col-md-1 col-sm-12 mb-2 d-flex align-items-end">
-                    <button class="btn btn-outline-secondary w-100 shadow-sm" (click)="clearFilters()">
-                        <i class="fas fa-sync-alt"></i> Reset
-                    </button>
+                <div class="col-md-1 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reset</label>
+                            <button type="button" class="btn btn-default btn-block border shadow-sm"
+                                (click)="clearFilters()"
+                                [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="invoices.length === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -126,8 +164,15 @@
                 <div class="col-12">
                     <div class="card card-outline card-info shadow-sm">
                         <div class="card-body p-0">
-                            
-                            <div class="table-responsive">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-info mb-3" role="status"></div>
+                                <p class="text-muted">Loading invoice data...</p>
+                            </div>
+                            }
+
+                            @if (!loading && invoices.length > 0) {
+                            <div class="table-responsive" id="invoicePrintSection">
                                 <table class="table table-hover table-valign-middle mb-0">
                                     <thead class="bg-light">
                                         <tr>
@@ -141,7 +186,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @for (item of pagedInvoices; track item.id; let i = $index) {
+                                        @for (item of invoices; track item.id; let i = $index) {
                                         <tr>
                                             <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}</td>
                                             <td>
@@ -155,29 +200,32 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ item.invoiceDate | date: 'mediumDate' }}</td>
-                                            <td><span class="font-weight-bold">{{ item.customerName }}</span></td>
+                                            <td>{{ item.saleDate | date: 'mediumDate' }}</td>
+                                            <td><span class="font-weight-bold">{{ getInvoiceCustomerName(item) }}</span></td>
                                             <td class="text-center">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
-                                                    'badge-success': item.status === 'Paid',
-                                                    'badge-warning text-white': item.status === 'Pending',
-                                                    'badge-danger': item.status === 'Overdue'
+                                                    'badge-success': getInvoiceStatus(item) === 'Paid',
+                                                    'badge-warning text-white': getInvoiceStatus(item) === 'Pending' || getInvoiceStatus(item) === 'Unpaid',
+                                                    'badge-danger': getInvoiceStatus(item) === 'Overdue'
                                                 }">
                                                     <i class="fas fa-circle mr-1 small"></i>
-                                                    {{ item.status }}
+                                                    {{ getInvoiceStatus(item) }}
                                                 </span>
                                             </td>
                                             <td class="text-right font-weight-bold text-primary">
-                                                {{ item.totalAmount | currency }}
+                                                {{ getInvoiceTotal(item) | currency }}
                                             </td>
                                             <td class="text-center pr-3">
                                                 <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border" title="View Invoice" (click)="viewInvoice(item)">
+                                                        <i class="fas fa-eye text-primary"></i>
+                                                    </button>
                                                     <button class="btn btn-white btn-sm border" title="Edit Invoice" (click)="editInvoice(item)">
                                                         <i class="fas fa-pencil-alt text-info"></i>
                                                     </button>
-                                                    <button class="btn btn-white btn-sm border" title="Delete Invoice" (click)="deleteInvoice(item)">
+                                                    <!-- <button class="btn btn-white btn-sm border" title="Delete Invoice" (click)="deleteInvoice(item)">
                                                         <i class="fas fa-trash-alt text-danger"></i>
-                                                    </button>
+                                                    </button> -->
                                                 </div>
                                             </td>
                                         </tr>
@@ -185,42 +233,188 @@
                                     </tbody>
                                 </table>
                             </div>
+                            }
 
-                            @if (filteredInvoices.length === 0) {
+                            @if (!loading && invoices.length === 0) {
                             <div class="text-center py-5">
-                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png"
-                                    style="width: 80px; opacity: 0.3;" alt="empty">
-                                <p class="font-weight-bold mt-3 mb-0 text-muted">No Invoices Found</p>
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-bold mt-3 mb-0 text-muted">No Invoices Found</p>
                                 <small class="text-muted">Create your first record using the 'New Invoice' button above.</small>
                             </div>
                             }
                         </div>
 
                         <div class="card-footer bg-white border-top">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
                                 <div class="text-muted small">
-                                    Showing <b>{{ ((currentPage - 1) * itemsPerPage) + 1 }}</b> to
+                                    Showing <b>{{ pageStart }}</b> to
                                     <b>{{ currentRecordMaxRecord }}</b> of <b>{{ totalItems }}</b> items
                                 </div>
 
-                                <ul class="pagination pagination-sm m-0">
-                                    <li class="page-item" [class.disabled]="currentPage === 1">
-                                        <button class="page-link" (click)="onPageChange(currentPage - 1)">Previous</button>
-                                    </li>
-                                    <li class="page-item active">
-                                        <span class="page-link shadow-sm bg-info border-info">{{ currentPage }}</span>
-                                    </li>
-                                    <li class="page-item" [class.disabled]="currentPage * itemsPerPage >= totalItems">
-                                        <button class="page-link" (click)="onPageChange(currentPage + 1)">Next</button>
-                                    </li>
-                                </ul>
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="itemsPerPage" (ngModelChange)="onPageSizeChange()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="currentPage === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(currentPage - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-info border-info">{{ currentPage }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="currentPage >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(currentPage + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
                     </div>
                 </div>
             </div>
-
         </div>
     </section>
 </div>
+
+@if (selectedInvoice) {
+<div class="modal fade show d-block" style="background: rgba(0,0,0,0.6); z-index: 1050;" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i> Sales Invoice Preview</h5>
+                <button type="button" class="close text-white" (click)="closeInvoiceView()">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-4" id="sales-invoice-print">
+                <div class="row mb-4">
+                    <div class="col-sm-6">
+                        <h4 class="text-primary font-weight-bold mb-0">StockoraPOS</h4>
+                        <p class="text-muted small">Sales Invoice Preview</p>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <p class="mb-0"><strong>Invoice:</strong> {{ selectedInvoice.invoiceNumber }}</p>
+                        <p class="mb-0"><strong>Date:</strong> {{ selectedInvoice.saleDate | date:'dd/MM/yyyy' }}</p>
+                        <p class="mb-0">
+                            <strong>Status:</strong>
+                            <span class="badge" [ngClass]="selectedInvoice.isPaid ? 'badge-success' : 'badge-warning'">
+                                {{ getInvoiceStatus() }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-sm-6">
+                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Customer Details</p>
+                        <h6 class="mb-0">{{ selectedInvoice.companyName || getInvoiceCustomerName() }}</h6>
+                        <p class="text-muted small mb-0">
+                            {{ getInvoiceContactName() }}<br>
+                            Customer ID: {{ selectedInvoice.customerId }}
+                        </p>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <p class="text-muted text-uppercase small font-weight-bold mb-1">Payment Method</p>
+                        <span class="badge badge-info h6">
+                            <i class="fas mr-1"
+                                [ngClass]="selectedInvoice.paymentMethod === 'Bank' ? 'fa-university' : 'fa-money-bill-wave'"></i>
+                            {{ selectedInvoice.paymentMethod || '-' }}
+                        </span>
+                    </div>
+                </div>
+
+                <table class="table table-sm table-striped border">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Product Description</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-right">Unit Price</th>
+                            <th>Serials</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (getSelectedInvoiceItems().length > 0) {
+                        <tr *ngFor="let item of getSelectedInvoiceItems(); let i = index">
+                            <td>{{ i + 1 }}</td>
+                            <td>{{ getInvoiceItemName(item) }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-right">{{ item.unitPrice | number:'1.2-2' }}</td>
+                            <td>{{ getInvoiceItemSerials(item) || '-' }}</td>
+                            <td class="text-right font-weight-bold">{{ getInvoiceItemTotal(item) | number:'1.2-2' }}</td>
+                        </tr>
+                        } @else {
+                        <tr>
+                            <td>1</td>
+                            <td>
+                                {{ selectedInvoice.invoiceNumber }}
+                                <small class="text-muted d-block">Item details are not available from the list response.</small>
+                            </td>
+                            <td class="text-center">-</td>
+                            <td class="text-right">-</td>
+                            <td>-</td>
+                            <td class="text-right font-weight-bold">{{ getInvoiceTotal() | number:'1.2-2' }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="row justify-content-end mt-4">
+                    <div class="col-sm-5">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th class="text-muted">Gross Total:</th>
+                                <td class="text-right font-weight-bold text-dark">{{ (selectedInvoice.subTotal || 0) | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Discount:</th>
+                                <td class="text-right text-danger">- {{ (selectedInvoice.discount || 0) | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr class="border-top">
+                                <th class="h5">Net Total:</th>
+                                <td class="text-right h5 text-primary font-weight-bold">{{ getInvoiceTotal() | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Amount Paid:</th>
+                                <td class="text-right text-success font-weight-bold">{{ getInvoicePaid() | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr class="bg-light">
+                                <th>Balance Due:</th>
+                                <td class="text-right text-bold"
+                                    [ngClass]="getInvoiceDue() > 0 ? 'text-danger' : 'text-success'">
+                                    {{ getInvoiceDue() | number:'1.2-2' }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light border-0 justify-content-between">
+                <button type="button" class="btn btn-outline-secondary px-4" (click)="closeInvoiceView()">
+                    Close
+                </button>
+                <div>
+                    <button type="button" class="btn btn-outline-info px-4 mr-2" (click)="printInvoice()">
+                        <i class="fas fa-print mr-1"></i> Print
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" (click)="downloadInvoicePdf()">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}

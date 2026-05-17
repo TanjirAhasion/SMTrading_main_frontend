@@ -58,3 +58,34 @@
 .scroll-item {
     flex: 0 0 auto;
 }
+
+
+#print-section {
+    display: none;
+}
+
+@media print {
+
+    body * {
+        visibility: hidden;
+    }
+
+    #print-section,
+    #print-section * {
+        visibility: visible;
+    }
+
+    #print-section {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .label {
+        width: 50mm;
+        padding: 10px;
+        text-align: center;
+    }
+}

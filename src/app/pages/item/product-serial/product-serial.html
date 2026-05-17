@@ -1,4 +1,21 @@
 <div class="content-wrapper">
+    @if (toast.show) {
+    <div class="toasts-top-right fixed">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" [ngClass]="'bg-' + toast.type">
+                <i class="{{ toast.icon }} mr-2"></i>
+                <strong class="mr-auto">{{ toast.title }}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                {{ toast.message }}
+            </div>
+        </div>
+    </div>
+    }
+
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -32,21 +49,29 @@
                         <span class="info-box-icon bg-warning text-white"><i class="fas fa-hand-holding-usd"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text">On Rent</span>
-                            <span class="info-box-number text-lg">0</span>
+                            <span class="info-box-number text-lg">{{ inRentCount }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-sm-6 col-12">
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info text-white"><i class="fas fa-link"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Linked Photos</span>
+                            <span class="info-box-number text-lg">{{ linkedCount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
                     <div class="info-box shadow-sm">
                         <span class="info-box-icon bg-danger text-white"><i class="fas fa-unlink"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">Not linked to machine</span>
-                            <span class="info-box-number text-lg">0</span>
+                            <span class="info-box-text">Need Photo Link</span>
+                            <span class="info-box-number text-lg">{{ unlinkedCount }}</span>
                         </div>
                     </div>
                 </div>
-
-
             </div>
             <div class="row">
                 <div class="col-md-6 col-sm-12 mb-2">
@@ -61,7 +86,16 @@
                                 </div>
                                 <input type="text" class="form-control border-left-0"
                                     placeholder="Filter by Serial, Product, or Brand..." [(ngModel)]="search"
-                                    (ngModelChange)="onSearch()">
+                                    (keyup.enter)="onSearch()">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" (click)="onSearch()">
+                                        <i class="fas fa-search mr-1"></i> Search
+                                    </button>
+                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                        [disabled]="!search && !selectedStatusId">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,7 +105,8 @@
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Status</label>
-                            <select class="form-control border shadow-sm" (ngModelChange)="onSearch()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatusId"
+                                (ngModelChange)="onSearch()">
                                 <option [value]="''">All Statuses</option>
                                 @for (s of serialStatus; track s.id) {
                                 <option [value]="s.id">{{ s.name }}</option>
@@ -84,12 +119,11 @@
                 <div class="col-md-3 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
-                            <label class="small text-muted mb-1">Filter by Linked Status</label>
-                            <select class="form-control border shadow-sm" (ngModelChange)="onSearch()">
-                                <option [value]="''">All </option>
-                                <option [value]="true"> Linked</option>
-                                <option [value]="false">not Linked</option>
-                            </select>
+                            <label class="small text-muted mb-1">QR Labels</label>
+                            <button type="button" class="btn btn-outline-info btn-block shadow-sm"
+                                (click)="printAllQr()" [disabled]="serials.length === 0">
+                                <i class="fas fa-qrcode mr-1"></i> Print All QR Codes
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -98,114 +132,6 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card card-outline card-info shadow-sm">
-
-                        @if (showForm) {
-                        <div class="card-body bg-light border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="text-info mb-0 font-weight-bold">
-                                    {{ isEditMode ? 'Edit Serial Details' : 'Register New Machine Unit' }}
-                                </h5>
-                                <button type="button" class="close" (click)="closeForm()">&times;</button>
-                            </div>
-
-                            <form #productForm="ngForm">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label font-weight-bold">Target Product <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-control select2 shadow-sm"
-                                                [(ngModel)]="serial.productId" name="productId" required
-                                                #prodField="ngModel"
-                                                [ngClass]="{'is-invalid': prodField.invalid && prodField.touched}">
-                                                <option [value]="null" disabled>-- Select Product --</option>
-                                                @for (p of products; track p.id) {
-                                                <option [value]="p.id">{{ p.name }}</option>
-                                                }
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label font-weight-bold">Serial Number</label>
-                                            <div class="input-group shadow-sm">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text"><i
-                                                            class="fas fa-fingerprint"></i></span>
-                                                </div>
-                                                <input type="text" class="form-control bg-white"
-                                                    [value]="isEditMode ? serial.serialNumber : 'Auto-Generated'"
-                                                    readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label font-weight-bold">Status</label>
-                                            <select class="form-control shadow-sm" [(ngModel)]="serial.status"
-                                                name="status">
-                                                <option *ngFor="let s of serialStatus" [value]="s.id">
-                                                    {{ s.name.replace('In', 'In ') }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label">Purchase Cost</label>
-                                            <div class="input-group shadow-sm">
-                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
-                                                </div>
-                                                <input type="number" class="form-control text-right"
-                                                    [(ngModel)]="serial.purchaseCost" name="purchaseCost"
-                                                    placeholder="0.00">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label">Selling Cost</label>
-                                            <div class="input-group shadow-sm">
-                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
-                                                </div>
-                                                <input type="number" class="form-control text-right"
-                                                    [(ngModel)]="serial.sellingCost" name="sellingCost"
-                                                    placeholder="0.00">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label">Rental Rate</label>
-                                            <div class="input-group shadow-sm">
-                                                <div class="input-group-prepend"><span class="input-group-text">$</span>
-                                                </div>
-                                                <input type="number" class="form-control text-right"
-                                                    [(ngModel)]="serial.rentalCost" name="rentalCost"
-                                                    placeholder="Per Day">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-3 text-right">
-                                    <button type="button" class="btn btn-default mr-2"
-                                        (click)="closeForm()">Cancel</button>
-                                    <button class="btn btn-success px-4 shadow-sm" (click)="saveSerial()"
-                                        [disabled]="prodField.invalid">
-                                        <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Unit' : 'Generate &
-                                        Save' }}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        }
-
                         <div class="card-body p-0">
                             @if (loading) {
                             <div class="text-center p-5">
@@ -293,6 +219,10 @@
                                                         (click)="openGalleryLinkModal(item)" title="Gallery">
                                                         <i class="fas fa-images text-primary"></i>
                                                     </button>
+                                                    <button class="btn btn-white btn-sm border" (click)="printQr(item)"
+                                                        title="Print QR Code">
+                                                        <i class="fas fa-qrcode text-success"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -314,24 +244,35 @@
                         </div>
 
                         <div class="card-footer bg-white border-top">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
                                 <div class="text-muted small">
-                                    Showing <b>{{ ((page - 1) * pageSize) + 1 }}</b> to
-                                    <b>{{ (page * pageSize > totalCount) ? totalCount : (page * pageSize) }}</b>
+                                    Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b>
                                     of <b>{{ totalCount }}</b> items
                                 </div>
 
-                                <ul class="pagination pagination-sm m-0">
-                                    <li class="page-item" [class.disabled]="page === 1">
-                                        <button class="page-link" (click)="onPageChange(page - 1)">Previous</button>
-                                    </li>
-                                    <li class="page-item active">
-                                        <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
-                                    </li>
-                                    <li class="page-item" [class.disabled]="page * pageSize >= totalCount">
-                                        <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
-                                    </li>
-                                </ul>
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="page === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="page >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
@@ -340,6 +281,173 @@
             </div>
         </div>
     </section>
+
+    @if (showForm) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
+                        <span class="ml-2">{{ isEditMode ? 'Edit Serial Details' : 'Register New Machine Unit' }}</span>
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeForm()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <form #serialForm="ngForm">
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Target Product <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-control shadow-sm" [(ngModel)]="serial.productId"
+                                                name="productId" required #prodField="ngModel"
+                                                [disabled]="isEditMode"
+                                                [ngClass]="{'is-invalid': prodField.invalid && prodField.touched}">
+                                                <option [ngValue]="null" disabled>-- Select Product --</option>
+                                                @for (p of products; track p.id) {
+                                                <option [ngValue]="p.id">{{ p.name }}</option>
+                                                }
+                                            </select>
+                                            @if (prodField.invalid && prodField.touched) {
+                                            <span class="text-danger small">Please select a product.</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Serial Number</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-fingerprint"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control bg-white"
+                                                    [value]="isEditMode ? serial.serialNumber : 'Auto-Generated'"
+                                                    readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">Status</label>
+                                            <select class="form-control shadow-sm" [(ngModel)]="serial.status"
+                                                name="status">
+                                                @for (s of serialStatus; track s.id) {
+                                                <option [value]="s.id">{{ s.name.replace('In', 'In ') }}</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-md-0">
+                                            <div class="custom-control custom-checkbox pt-md-4">
+                                                <input type="checkbox" class="custom-control-input" id="isOpeningStock"
+                                                    [(ngModel)]="serial.isOpeningStock" name="isOpeningStock"
+                                                    (ngModelChange)="onOpeningStockChange($event)">
+                                                <label class="custom-control-label font-weight-bold"
+                                                    for="isOpeningStock">Opening Stock</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (serial.isOpeningStock) {
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-label font-weight-bold">Legacy Serial <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control shadow-sm"
+                                                [(ngModel)]="serial.legacySerial" name="legacySerial"
+                                                #legacySerialField="ngModel" required
+                                                [ngClass]="{'is-invalid': legacySerialField.invalid && legacySerialField.touched}"
+                                                placeholder="Enter legacy serial number">
+                                            @if (legacySerialField.invalid && legacySerialField.touched) {
+                                            <span class="text-danger small">Legacy serial number is required.</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    }
+
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label">Note</label>
+                                            <textarea rows="2" class="form-control shadow-sm"
+                                                [(ngModel)]="serial.note" name="note"
+                                                placeholder="Optional note"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-label">Purchase Cost</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.purchaseCost" name="purchaseCost"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-label">Selling Cost</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.sellingCost" name="sellingCost"
+                                                    placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label">Rental Rate</label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control text-right"
+                                                    [(ngModel)]="serial.rentalCost" name="rentalCost"
+                                                    placeholder="Per Day">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-white border-0 justify-content-between">
+                    <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
+                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveSerial()"
+                        [disabled]="serialForm.invalid">
+                        <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Unit' : 'Generate & Save' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
 
     <div class="modal fade" id="machineImageModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -441,11 +549,27 @@
                                         }
 
                                         <div class="custom-file mt-2">
-                                            <input type="file" class="custom-file-input"
+                                            <input type="file" class="custom-file-input" id="galleryFileInput"
                                                 (change)="onFileSelected($event)">
                                             <label class="custom-file-label text-truncate">{{ selectedFileName ||
                                                 'Choose file...' }}</label>
                                         </div>
+
+                                        @if (imagePreview) {
+                                        <div class="mt-3 text-center">
+                                            <label class="font-weight-bold text-muted text-sm d-block mb-2">Image
+                                                Preview</label>
+                                            <div class="position-relative d-inline-block p-2 bg-white border rounded shadow-sm">
+                                                <img [src]="imagePreview" class="rounded"
+                                                    style="max-height: 180px; max-width: 100%; object-fit: contain;">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute"
+                                                    style="top: 2px; right: 2px;"
+                                                    (click)="resetUploadForm(); imageForm.resetForm()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        }
                                     </div>
 
                                     <div class="col-md-3 mt-2 mt-md-0 d-flex flex-column">

@@ -1,0 +1,4 @@
+.serial-badge{
+  width: calc(50% - 5px);
+  text-align: center;
+}

@@ -11,6 +11,12 @@ import { PurchaseComponent } from './pages/inventory/purchase/purchase';
 import { InvoiceComponent } from './pages/inventory/invoice/invoice';
 import { PurchaseListComponent } from './pages/inventory/purchase-list/purchase-list';
 import { InvoiceListComponent } from './pages/inventory/invoce-list/invoce-list';
+import { Rental } from './pages/inventory/rental/rental';
+import { RentalContractComponent } from './pages/inventory/rental-contract/rental-contract';
+import { RentalList } from './pages/inventory/rental-list/rental-list';
+import { CashAccount } from './pages/cashManagement/cash-account/cash-account';
+import { ExpenseCategory } from './pages/cashManagement/expense-category/expense-category';
+import { Expense } from './pages/cashManagement/expense/expense';
 
 export const routes: Routes = [
 
@@ -73,10 +79,41 @@ export const routes: Routes = [
         title: 'Purchase List'
       },
       {
+        path: 'inventory/sales',
+        component: InvoiceComponent,
+        title: 'Sales'
+      },
+      {
         path: 'inventory/invoicelist',
         component: InvoiceListComponent,
         title: 'Invoice List'
+      },
+      {
+        path: 'inventory/rentalcontract',
+        component: RentalContractComponent,
+        title: 'Rental Contract'
+      },
+      {
+        path: 'inventory/rentallist',
+        component: RentalList,
+        title: 'Rental List'
+      },
+      {
+        path: 'cash-management/cash-account',
+        component: CashAccount,
+        title: 'Cash Account'
+      },
+      {
+        path: 'cash-management/expense-category',
+        component: ExpenseCategory,
+        title: 'Expense Category'
+      },
+      {
+        path: 'cash-management/expense',
+        component: Expense,
+        title: 'Expense'
       }
+
     ]
   }
 ];

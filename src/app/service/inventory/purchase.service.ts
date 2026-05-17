@@ -17,6 +17,7 @@ export interface CreatePurchaseRequest {
   subTotal: number;
   discount: number;
   paidAmount: number;
+  cashAccountId: number;
   paymentMethod: string; // 'Cash' or 'Bank'
   items: CreatePurchaseItemRequest[];
 }
