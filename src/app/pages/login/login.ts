@@ -5,12 +5,11 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../../core/services/auths.service';
 import { LoginRequest } from '../../core/models/auth.model';
 import { FormsModule } from '@angular/forms';
-import { TokenService } from '../../core/services/token.service';
 
 @Component({
   selector: 'app-login-page',
@@ -23,8 +22,8 @@ import { TokenService } from '../../core/services/token.service';
 
 export class LoginComponent {
   private readonly authService = inject(AuthService);
-  private tokenService = inject(TokenService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -44,12 +43,9 @@ export class LoginComponent {
     this.error.set(null);
 
     this.authService.login(request).subscribe({
-      next: (res) => {
-
-        this.tokenService.setTokens(res.accessToken, res.refreshToken);
-
+      next: () => {
         this.isLoading.set(false);
-        window.location.href = this.returnUrl;
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (err) => {
         this.error.set(err?.error?.message ?? 'Login failed');

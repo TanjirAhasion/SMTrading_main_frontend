@@ -1,0 +1,12 @@
+.bg-soft-info {
+  background-color: rgba(23, 162, 184, 0.1);
+}
+
+.table-valign-middle td {
+  vertical-align: middle !important;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  color: #555;
+}

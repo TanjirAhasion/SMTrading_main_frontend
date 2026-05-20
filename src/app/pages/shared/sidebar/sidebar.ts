@@ -1,15 +1,23 @@
-import { Component, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import { filter, map, Subscription } from 'rxjs';
+
+import { AuthService } from '../../../core/services/auths.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
 export class Sidebar implements OnDestroy {
+  private readonly authService = inject(AuthService);
+
   openMenu: string | null = null;
+  readonly isTenant$ = this.authService.state$.pipe(
+    map((state) => state.user?.type?.toLowerCase() === 'tenant')
+  );
 
   private readonly routeSubscription: Subscription;
 

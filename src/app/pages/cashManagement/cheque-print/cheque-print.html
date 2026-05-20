@@ -1,0 +1,59 @@
+<div class="content-wrapper cheque-print-page">
+  @if (toast.show) {
+  <div class="toasts-top-right fixed no-print">
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header" [ngClass]="'bg-' + toast.type">
+        <i class="{{ toast.icon }} mr-2"></i>
+        <strong class="mr-auto">{{ toast.title }}</strong>
+        <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="toast-body">{{ toast.message }}</div>
+    </div>
+  </div>
+  }
+
+  <section class="content-header no-print">
+    <div class="container-fluid">
+      <div class="row align-items-center mb-2">
+        <div class="col-sm-7">
+          <h1 class="m-0">
+            <i class="fas fa-money-check-alt text-info mr-2"></i>
+            Cheque Printing
+          </h1>
+          <p class="text-muted mb-0">Bank-template cheque printing with millimeter calibration.</p>
+        </div>
+        <div class="col-sm-5">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item active">Cheque Printing</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xl-4 col-lg-5">
+          <app-cheque-form [cheque]="cheque" [templates]="templates" [selectedTemplate]="selectedTemplate"
+            [selectedField]="selectedField" (chequeChange)="updateCheque($event)" (amountChanged)="updateAmountInWords()"
+            (templateChange)="changeTemplate($event)" (selectedFieldChange)="selectedField = $event"
+            (positionChange)="selectedTemplate = selectedTemplate" (print)="printCheque()" (exportPdf)="exportPdf()"
+            (saveTemplate)="saveTemplate()" (downloadTemplate)="downloadTemplate()" (loadTemplate)="loadTemplate($event)"
+            (reset)="resetForm()">
+          </app-cheque-form>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+          <app-cheque-preview [cheque]="cheque" [template]="selectedTemplate" [selectedField]="selectedField"
+            [formattedDate]="formattedDate" [formattedAmount]="formattedAmount"
+            (selectedFieldChange)="selectedField = $event" (fieldMoved)="moveField($event)">
+          </app-cheque-preview>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

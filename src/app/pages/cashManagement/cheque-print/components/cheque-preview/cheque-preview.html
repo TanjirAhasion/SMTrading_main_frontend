@@ -1,0 +1,28 @@
+<div class="preview-shell">
+  <div class="preview-toolbar no-print">
+    <div>
+      <span class="text-muted">Template</span>
+      <strong>{{ template.bankName }}</strong>
+    </div>
+    <div>
+      <span class="text-muted">Cheque</span>
+      <strong>{{ template.chequeWidth }}mm x {{ template.chequeHeight }}mm</strong>
+    </div>
+    <div>
+      <span class="text-muted">Offset</span>
+      <strong>{{ template.calibration.xOffset }}mm, {{ template.calibration.yOffset }}mm</strong>
+    </div>
+  </div>
+
+  <div class="a4-stage">
+    <div class="printable-cheque" #sheet [ngStyle]="printableStyle" (pointermove)="drag($event)"
+      (pointerup)="endDrag()" (pointercancel)="endDrag()">
+      @for (field of fields; track trackField(field)) {
+      <div class="cheque-field" [class.active]="field === selectedField" [ngStyle]="fieldStyle(field)"
+        (pointerdown)="startDrag($event, field, sheet)">
+        {{ valueFor(field) }}
+      </div>
+      }
+    </div>
+  </div>
+</div>

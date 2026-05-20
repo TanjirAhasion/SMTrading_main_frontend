@@ -1,0 +1,320 @@
+<div class="content-wrapper">
+  @if (toast.show) {
+  <div class="toasts-top-right fixed">
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header" [ngClass]="'bg-' + toast.type">
+        <i class="{{ toast.icon }} mr-2"></i>
+        <strong class="mr-auto">{{ toast.title }}</strong>
+        <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="toast-body">
+        {{ toast.message }}
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 font-weight-bold">
+            <i class="fas fa-users mr-2 text-info"></i>User Management
+          </h1>
+        </div>
+        <div class="col-sm-6 text-right">
+          <button type="button" class="btn btn-info shadow-sm" (click)="openForm()">
+            <i class="fas fa-plus-circle mr-1"></i> Add New User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-4 col-sm-6 col-12">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-info"><i class="fas fa-users"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Total Users</span>
+              <span class="info-box-number text-lg">{{ users().length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 col-sm-6 col-12">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-success"><i class="fas fa-building"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Tenant Users</span>
+              <span class="info-box-number text-lg">{{ tenantCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 col-sm-6 col-12">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-secondary"><i class="fas fa-user"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Other Users</span>
+              <span class="info-box-number text-lg">{{ nonTenantCount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-9 col-sm-12 mb-2">
+          <div class="card shadow-sm border-0 h-100 mb-0">
+            <div class="card-body py-2">
+              <label class="small text-muted mb-1">Search Users</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text bg-white border-right-0">
+                    <i class="fas fa-search text-muted"></i>
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  class="form-control border-left-0"
+                  placeholder="Name, username, phone, or email..."
+                  [(ngModel)]="search"
+                  (keyup.enter)="onSearch()"
+                >
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-info" (click)="onSearch()">
+                    <i class="fas fa-search mr-1"></i> Search
+                  </button>
+                  <button type="button" class="btn btn-default border" (click)="resetFilters()" [disabled]="!search">
+                    <i class="fas fa-undo mr-1"></i> Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-12 mb-2">
+          <div class="card shadow-sm border-0 h-100 mb-0">
+            <div class="card-body py-2">
+              <label class="small text-muted mb-1">Refresh</label>
+              <button type="button" class="btn btn-outline-info btn-block shadow-sm" (click)="loadUsers()" [disabled]="isLoading()">
+                <i class="fas fa-sync-alt mr-1"></i> Reload Users
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-outline card-info shadow-sm">
+            <div class="card-body p-0">
+              @if (isLoading()) {
+              <div class="text-center p-5">
+                <div class="spinner-border text-info mb-3" role="status"></div>
+                <p class="text-muted">Loading users...</p>
+              </div>
+              }
+
+              @if (!isLoading() && pagedUsers.length > 0) {
+              <div class="table-responsive">
+                <table class="table table-hover table-valign-middle mb-0">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="pl-3" style="width: 50px;">#</th>
+                      <th style="min-width: 220px;">User Identity</th>
+                      <th>Username</th>
+                      <th>Contact</th>
+                      <th class="text-center">Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of pagedUsers; track item.id || item.userId || item.username; let i = $index) {
+                    <tr>
+                      <td class="pl-3 text-muted">{{ pageStart + i }}</td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="bg-soft-info p-2 rounded mr-3 text-info">
+                            <i class="fas fa-user fa-lg"></i>
+                          </div>
+                          <div>
+                            <span class="d-block font-weight-bold text-dark">{{ getDisplayName(item) }}</span>
+                            <small class="badge badge-light border text-muted">ID: {{ item.id || item.userId || '-' }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="text-muted text-sm">{{ item.username || '-' }}</span>
+                      </td>
+                      <td>
+                        <span class="font-weight-bold d-block text-sm">{{ item.phone || '-' }}</span>
+                        <span class="text-muted text-xs">{{ item.email || '-' }}</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge badge-info px-3 py-2 rounded-pill">
+                          {{ item.type || '-' }}
+                        </span>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              }
+
+              @if (!isLoading() && filteredUsers.length === 0) {
+              <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <p class="text-bold mt-3 mb-0 text-muted">No Users Found</p>
+                <small class="text-muted">Add a new user or adjust your search.</small>
+              </div>
+              }
+            </div>
+
+            <div class="card-footer bg-white border-top">
+              <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <div class="text-muted small">
+                  Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of <b>{{ totalCount }}</b> users
+                </div>
+
+                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                  <select class="form-control form-control-sm mr-2" style="width: 80px;" [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                    <option [ngValue]="5">5</option>
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="25">25</option>
+                    <option [ngValue]="50">50</option>
+                  </select>
+
+                  <ul class="pagination pagination-sm m-0">
+                    <li class="page-item" [class.disabled]="page === 1">
+                      <button class="page-link" type="button" (click)="onPageChange(page - 1)">Previous</button>
+                    </li>
+                    <li class="page-item active">
+                      <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                    </li>
+                    <li class="page-item" [class.disabled]="page >= totalPages">
+                      <button class="page-link" type="button" (click)="onPageChange(page + 1)">Next</button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (showForm) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title font-weight-light">
+            <i class="fas fa-plus-circle"></i>
+            <span class="ml-2">Create New User</span>
+          </h5>
+          <button type="button" class="close text-white" (click)="cancel()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="saveUser()" novalidate>
+          <div class="modal-body bg-light">
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label font-weight-bold" for="username">Username <span class="text-danger">*</span></label>
+                      <input id="username" type="text" class="form-control shadow-sm" [class.is-invalid]="isInvalid('username')" formControlName="username" autocomplete="username">
+                      @if (isInvalid('username')) {
+                      <span class="text-danger small">Username is required.</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label font-weight-bold" for="password">Password <span class="text-danger">*</span></label>
+                      <input id="password" type="password" class="form-control shadow-sm" [class.is-invalid]="isInvalid('password')" formControlName="password" autocomplete="new-password">
+                      @if (isInvalid('password')) {
+                      <span class="text-danger small d-block" *ngIf="hasError('password', 'required')">Password is required.</span>
+                      <span class="text-danger small d-block" *ngIf="hasError('password', 'minlength')">Password must be at least 8 characters.</span>
+                      <span class="text-danger small d-block" *ngIf="hasError('password', 'pattern')">Password must contain uppercase, number, and special character.</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label font-weight-bold" for="firstName">First Name <span class="text-danger">*</span></label>
+                      <input id="firstName" type="text" class="form-control shadow-sm" [class.is-invalid]="isInvalid('firstName')" formControlName="firstName" autocomplete="given-name">
+                      @if (isInvalid('firstName')) {
+                      <span class="text-danger small">First name is required.</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="lastName">Last Name</label>
+                      <input id="lastName" type="text" class="form-control shadow-sm" formControlName="lastName" autocomplete="family-name">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label font-weight-bold" for="phone">Phone <span class="text-danger">*</span></label>
+                      <input id="phone" type="tel" class="form-control shadow-sm" [class.is-invalid]="isInvalid('phone')" formControlName="phone" autocomplete="tel">
+                      @if (isInvalid('phone')) {
+                      <span class="text-danger small">Phone is required.</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label font-weight-bold" for="email">Email <span class="text-danger">*</span></label>
+                      <input id="email" type="email" class="form-control shadow-sm" [class.is-invalid]="isInvalid('email')" formControlName="email" autocomplete="email">
+                      @if (isInvalid('email')) {
+                      <span class="text-danger small d-block" *ngIf="hasError('email', 'required')">Email is required.</span>
+                      <span class="text-danger small d-block" *ngIf="hasError('email', 'email')">Enter a valid email address.</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="avatarUrl">Avatar URL</label>
+                  <input id="avatarUrl" type="url" class="form-control shadow-sm" formControlName="avatarUrl" autocomplete="url">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-white border-0 justify-content-between">
+            <button type="button" class="btn btn-default shadow-sm" (click)="cancel()">Cancel</button>
+            <button type="submit" class="btn btn-success px-4 shadow-sm" [disabled]="form.invalid || isSaving()">
+              @if (isSaving()) {
+              <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+              }
+              <i class="fas fa-save mr-1"></i> Save User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+  }
+</div>

@@ -17,6 +17,7 @@ import { RentalList } from './pages/inventory/rental-list/rental-list';
 import { CashAccount } from './pages/cashManagement/cash-account/cash-account';
 import { ExpenseCategory } from './pages/cashManagement/expense-category/expense-category';
 import { Expense } from './pages/cashManagement/expense/expense';
+import { ChequePrint } from './pages/cashManagement/cheque-print/cheque-print';
 
 export const routes: Routes = [
 
@@ -112,8 +113,16 @@ export const routes: Routes = [
         path: 'cash-management/expense',
         component: Expense,
         title: 'Expense'
+      },
+      {
+        path: 'cash-management/cheque-print',
+        component: ChequePrint,
+        title: 'Cheque Print'
+      },
+      {
+        path: 'user',
+        loadChildren: () => import('./user/user.module').then((m) => m.UserModule)
       }
-
     ]
   }
 ];

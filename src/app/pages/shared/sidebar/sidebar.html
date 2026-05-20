@@ -159,7 +159,19 @@
                             <p>Expense</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a routerLink="/cash-management/cheque-print" routerLinkActive="active" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Cheque Print</p>
+                        </a>
+                    </li>
                 </ul>
+            </li>
+            <li *ngIf="isTenant$ | async" class="nav-item">
+                <a routerLink="/user/list" routerLinkActive="active" class="nav-link">
+                    <i class="nav-icon fas fa-users"></i>
+                    <p>User</p>
+                </a>
             </li>
             <li class="nav-item" [class.menu-open]="isMenuOpen('forms')">
                 <a href="#" class="nav-link" [class.active]="isMenuOpen('forms')" (click)="toggleMenu('forms', $event)">

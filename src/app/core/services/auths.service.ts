@@ -30,11 +30,16 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly tokenService = inject(TokenService);
+  private readonly USER_KEY = 'auth.user';
 
   private readonly _state$ = new BehaviorSubject<AuthState>(INITIAL_STATE);
 
   /** Public read-only stream — components subscribe, never mutate. */
   readonly state$: Observable<AuthState> = this._state$.asObservable();
+
+  constructor() {
+    this.rehydrate();
+  }
 
   // ── Convenience selectors ──────────────────────────────────────────
   get isAuthenticated(): boolean {
@@ -64,35 +69,72 @@ export class AuthService {
 
   logout(): void {
     this.tokenService.clearTokens();
+    localStorage.removeItem(this.USER_KEY);
     this._state$.next(INITIAL_STATE);
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/login']);
   }
 
   /** Call on app bootstrap to rehydrate state from stored token. */
   rehydrate(): void {
     const token = this.tokenService.getAccessToken();
     if (token) {
-      // In a real app, validate/decode the JWT here (e.g., jwt-decode).
-      // For brevity we just mark as authenticated.
-      this.patch({ accessToken: token, isAuthenticated: true });
+      this.patch({
+        user: this.getStoredUser(),
+        accessToken: token,
+        isAuthenticated: true
+      });
     }
   }
 
   // ── Private helpers ───────────────────────────────────────────────
 
   private onLoginSuccess(response: LoginResponse): void {
+    const user = this.normalizeUser(response);
+
     this.tokenService.setTokens(response.accessToken, response.refreshToken);
+    this.storeUser(user);
     this.patch({
-      user: response.user,
+      user,
       accessToken: response.accessToken,
       isAuthenticated: true,
       isLoading: false,
       error: null,
     });
-    this.router.navigate(['/dashboard']);
   }
 
   private patch(partial: Partial<AuthState>): void {
     this._state$.next({ ...this._state$.value, ...partial });
+  }
+
+  private normalizeUser(response: LoginResponse): AuthUser {
+    const user = response.user;
+
+    return {
+      ...user,
+      id: user?.id ?? response.userId,
+      displayName: user?.displayName ?? user?.name ?? response.name ?? '',
+      name: user?.name ?? response.name,
+      roles: user?.roles ?? [],
+      tenantId: user?.tenantId ?? response.tenantId,
+      type: user?.type ?? user?.Type ?? response.type ?? response.Type,
+    };
+  }
+
+  private storeUser(user: AuthUser): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
+
+  private getStoredUser(): AuthUser | null {
+    const storedUser = localStorage.getItem(this.USER_KEY);
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser) as AuthUser;
+    } catch {
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
   }
 }

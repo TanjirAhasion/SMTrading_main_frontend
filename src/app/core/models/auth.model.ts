@@ -12,14 +12,23 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number; // seconds
-  user: AuthUser;
+  type: string;
+  Type?: string;
+  tenantId: string;
+  userId: string;
+  name?: string;
+  user?: AuthUser;
 }
 
 export interface AuthUser {
   id: string;
-  email: string;
+  email?: string;
   displayName: string;
+  name?: string;
   roles: string[];
+  tenantId?: string;
+  type?: string;
+  Type?: string;
 }
 
 export interface AuthState {

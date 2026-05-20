@@ -115,7 +115,7 @@
     <li class="nav-item dropdown">
       <a class="nav-link" data-toggle="dropdown" href="#">
         <i class="fas fa-user mr-1"></i>
-        <span class="d-none d-md-inline">John Doe</span>
+        <span class="d-none d-md-inline">{{ userName$ | async }}</span>
       </a>
       <div class="dropdown-menu dropdown-menu-md dropdown-menu-right">
         <span class="dropdown-header">Account Management</span>
@@ -124,7 +124,7 @@
           <i class="fas fa-user-circle mr-2"></i> My Profile
         </a>
         <div class="dropdown-divider"></div>
-        <a href="logout.html" class="dropdown-item text-danger">
+        <a href="#" class="dropdown-item text-danger" (click)="logout($event)">
           <i class="fas fa-sign-out-alt mr-2"></i> Logout
         </a>
       </div>
