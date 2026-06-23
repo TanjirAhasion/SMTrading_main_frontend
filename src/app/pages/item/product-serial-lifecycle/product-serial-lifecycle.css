@@ -1,0 +1,88 @@
+.serial-timeline {
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.serial-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0.35rem;
+    bottom: 0.35rem;
+    left: 0.55rem;
+    width: 2px;
+    background: #d9edf7;
+}
+
+.serial-timeline-item {
+    position: relative;
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.serial-timeline-icon {
+    position: absolute;
+    left: -1.75rem;
+    top: 0.2rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.serial-timeline-body {
+    width: 100%;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #fff;
+    padding: 0.85rem 1rem;
+}
+
+.serial-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0.85rem;
+}
+
+.serial-image-tile {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.serial-image-tile img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: #f8f9fa;
+}
+
+.serial-image-meta {
+    padding: 0.65rem;
+}
+
+.serial-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.serial-action-grid .btn {
+    min-height: 38px;
+    white-space: normal;
+}
+
+.nav-pills .nav-link {
+    border: 0;
+    background: transparent;
+}
+
+@media (max-width: 575.98px) {
+    .serial-action-grid {
+        grid-template-columns: 1fr;
+    }
+}

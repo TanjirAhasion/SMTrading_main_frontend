@@ -83,7 +83,6 @@
                   class="form-control border-left-0"
                   placeholder="Name, username, phone, or email..."
                   [(ngModel)]="search"
-                  (keyup.enter)="onSearch()"
                 >
                 <div class="input-group-append">
                   <button type="button" class="btn btn-info" (click)="onSearch()">
@@ -123,10 +122,9 @@
 
               @if (!isLoading() && pagedUsers.length > 0) {
               <div class="table-responsive">
-                <table class="table table-hover table-valign-middle mb-0">
+                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                   <thead class="bg-light">
                     <tr>
-                      <th class="pl-3" style="width: 50px;">#</th>
                       <th style="min-width: 220px;">User Identity</th>
                       <th>Username</th>
                       <th>Contact</th>
@@ -136,26 +134,24 @@
                   <tbody>
                     @for (item of pagedUsers; track item.id || item.userId || item.username; let i = $index) {
                     <tr>
-                      <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                      <td>
+                      <td data-label="User Identity">
                         <div class="d-flex align-items-center">
                           <div class="bg-soft-info p-2 rounded mr-3 text-info">
                             <i class="fas fa-user fa-lg"></i>
                           </div>
                           <div>
                             <span class="d-block font-weight-bold text-dark">{{ getDisplayName(item) }}</span>
-                            <small class="badge badge-light border text-muted">ID: {{ item.id || item.userId || '-' }}</small>
                           </div>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Username">
                         <span class="text-muted text-sm">{{ item.username || '-' }}</span>
                       </td>
-                      <td>
+                      <td data-label="Contact">
                         <span class="font-weight-bold d-block text-sm">{{ item.phone || '-' }}</span>
                         <span class="text-muted text-xs">{{ item.email || '-' }}</span>
                       </td>
-                      <td class="text-center">
+                      <td class="text-center" data-label="Type">
                         <span class="badge badge-info px-3 py-2 rounded-pill">
                           {{ item.type || '-' }}
                         </span>

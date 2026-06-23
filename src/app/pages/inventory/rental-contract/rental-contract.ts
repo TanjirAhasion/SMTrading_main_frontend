@@ -40,7 +40,7 @@ export class RentalContractComponent implements OnInit {
   cashAccounts: CashAccountDto[] = [];
 
   selectedCustomer: Customer | null = null;
-  customerDueAmount: number = 0; // In a real app, fetch this from a 'CustomerBalance' API
+  customerDueAmount: number = 0;
   
   loadingCustomers = false;
 
@@ -69,7 +69,7 @@ export class RentalContractComponent implements OnInit {
   request: CreateRentalContractRequest = {
     customerId: 0,
     startDate: '',
-    endDate: '',
+    endDate: null,
     securityDeposit: 0,
     billingCycle: 1,
     note: '',
@@ -102,6 +102,15 @@ export class RentalContractComponent implements OnInit {
 
   get selectedCashAccount(): CashAccountDto | undefined {
     return this.cashAccounts.find((account) => account.id === Number(this.request.cashAccountId));
+  }
+
+  get totalDueWithCurrentRent(): number {
+    return Math.max(0, Number(this.customerDueAmount) + Number(this.totalRent));
+  }
+
+  get availableSerials(): any[] {
+    return this.serials.filter(serial =>
+      !this.selectedSerials.some(selected => selected.serialNumber === serial.serialNumber));
   }
 
   onCashAccountChange() {
@@ -161,13 +170,27 @@ export class RentalContractComponent implements OnInit {
       this.customers.find(x =>
         x.id === this.request.customerId) || null;
 
-    this.customerDueAmount = this.selectedCustomer ? 500 : 0;
+    this.customerDueAmount = Number(this.selectedCustomer?.dueAmount) || 0;
+
+    if (this.selectedCustomer) {
+      this.customerService.getById(this.selectedCustomer.id).subscribe({
+        next: (customer) => {
+          this.selectedCustomer = customer;
+          this.customerDueAmount = Number(customer?.dueAmount) || 0;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error loading customer balance', err);
+        }
+      });
+    }
   }
 
   // MODAL
   openSerialModal() {
 
     this.serialModalOpen = true;
+    this.loadSerials();
   }
 
   closeSerialModal() {
@@ -180,9 +203,31 @@ export class RentalContractComponent implements OnInit {
   }
 
   // SEARCH
-  onSearchChange(value: string) {
+  loadSerials() {
+    const search = this.serialSearch.trim();
+    if (search.length > 0 && search.length < 3) {
+      this.serials = [];
+      return;
+    }
 
-    if (!value || value.length < 2) {
+    this.productSerialService
+      .getSerials(1, 10, search, 1)
+      .subscribe((res: any) => {
+        this.serials = res.items || [];
+        this.cdr.detectChanges();
+      });
+  }
+
+  onSearchChange(value: string) {
+    this.serialSearch = value;
+    const search = value.trim();
+
+    if (!search) {
+      this.loadSerials();
+      return;
+    }
+
+    if (search.length < 3) {
 
       this.serials = [];
 
@@ -190,7 +235,7 @@ export class RentalContractComponent implements OnInit {
     }
 
     this.productSerialService
-      .getSerials(1, 20, value, 1)
+      .getSerials(1, 10, search, 1)
       .subscribe((res: any) => {
 
         this.serials = res.items || [];
@@ -209,13 +254,13 @@ export class RentalContractComponent implements OnInit {
       return;
     }
 
-    this.selectedSerials.push(serial);
+    this.selectedSerials.push(this.normalizeSerial(serial));
 
     this.buildGroupedItems();
 
     this.serialSearch = '';
 
-    this.serials = [];
+    this.loadSerials();
   }
 
   // REMOVE SERIAL
@@ -255,13 +300,13 @@ export class RentalContractComponent implements OnInit {
 
           productName: serial.productName,
 
-          brand: serial.brand,
+          brand: serial.brandName || serial.brand,
 
           model: serial.model,
 
           quantity: 1,
 
-          rent: 0,
+          rent: Number(serial.rentalCost) || 0,
 
           serialNumbers: [
             serial.serialNumber
@@ -284,6 +329,21 @@ export class RentalContractComponent implements OnInit {
     });
 
     this.request.items = grouped;
+  }
+
+  private normalizeSerial(serial: any): any {
+    return {
+      ...serial,
+      productName: serial.productName || this.getProductName(serial.productId),
+      brandName: serial.brandName || serial.brand || '',
+      model: serial.model || '',
+      rentalCost: Number(serial.rentalCost) || 0
+    };
+  }
+
+  private getProductName(productId: number): string {
+    const product = this.products.find(item => Number(item.id) === Number(productId));
+    return product?.name || 'Unknown Product';
   }
 
   // TOTAL RENT
@@ -335,13 +395,34 @@ export class RentalContractComponent implements OnInit {
   submitContract() {
     this.onCashAccountChange();
 
+    const payload: CreateRentalContractRequest = {
+      ...this.request,
+      customerId: Number(this.request.customerId),
+      startDate: this.request.startDate,
+      endDate: this.request.endDate || null,
+      billingCycle: Number(this.request.billingCycle),
+      securityDeposit: Number(this.request.securityDeposit) || 0,
+      cashAccountId: Number(this.request.cashAccountId),
+      items: this.request.items.map((item) => ({
+        productId: Number(item.productId),
+        productName: item.productName,
+        quantity: Number(item.quantity) || 0,
+        rent: Number(item.rent) || 0,
+        serialNumbers: item.serialNumbers
+          .map((serial) => String(serial).trim())
+          .filter(Boolean)
+      }))
+    };
+
     this.rentalService
-      .createRentalContract(this.request)
+      .createRentalContract(payload)
       .subscribe({
         next: () => {
 
           alert('Rental contract created');
 
+          this.loadCustomers();
+          this.loadCashAccounts();
           this.resetForm();
         },
         error: (err) => {
@@ -362,7 +443,7 @@ export class RentalContractComponent implements OnInit {
     this.request = {
       customerId: 0,
       startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
+      endDate: null,
       securityDeposit: 0,
       billingCycle: 1,
       note: '',
@@ -374,6 +455,7 @@ export class RentalContractComponent implements OnInit {
     this.selectedSerials = [];
 
     this.selectedCustomer = null;
+    this.customerDueAmount = 0;
 
     this.showConfirmation = false;
   }

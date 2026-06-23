@@ -49,7 +49,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 col-sm-12 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search PO Number</label>
@@ -60,43 +60,35 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0" placeholder="Search PO..."
-                                    [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="applyFilters()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                </div>
+                                    [(ngModel)]="searchQuery">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Start Date</label>
-                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedStartDate"
-                                (change)="applyFilters()">
+                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedStartDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">End Date</label>
-                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedEndDate"
-                                (change)="applyFilters()">
+                            <input type="date" class="form-control border shadow-sm" [(ngModel)]="selectedEndDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Vendor</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedVendorId"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedVendorId">
                                 <option [value]="''">All Vendors</option>
                                 @for (v of vendors; track v.id) {
                                 <option [value]="v.id">{{ v.name }}</option>
@@ -106,12 +98,11 @@
                     </div>
                 </div>
 
-                <!-- <div class="col-md-2 col-sm-6 mb-2">
+                <!-- <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Machine</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedMachine"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedMachine">
                                 <option [value]="''">All Machines</option>
                                 @for (m of machines; track m) {
                                 <option [value]="m">{{ m }}</option>
@@ -121,20 +112,25 @@
                     </div>
                 </div> -->
 
-                <div class="col-md-1 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
-                            <label class="small text-muted mb-1">Reset</label>
-                            <button type="button" class="btn btn-default btn-block border shadow-sm"
-                                (click)="clearFilters()"
-                                [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedVendorId">
-                                <i class="fas fa-undo"></i>
-                            </button>
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border"
+                                    (click)="clearFilters()"
+                                    [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedVendorId">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Reports</label>
@@ -174,10 +170,9 @@
 
                             @if (!loading && purchases.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 60px;">#</th>
                                             <th style="min-width: 150px;">PO Number</th>
                                             <th>Date</th>
                                             <th>Company</th>
@@ -191,9 +186,7 @@
                                     <tbody>
                                         @for (item of purchases; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}
-                                            </td>
-                                            <td>
+                                            <td data-label="PO Number">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-file-invoice fa-lg"></i>
@@ -201,19 +194,18 @@
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{
                                                             item.purchaseNumber }}</span>
-                                                        <small class="text-muted">ID: {{ item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ item.purchaseDate | date: 'mediumDate' }}</td>
+                                            <td data-label="Date">{{ item.purchaseDate | date: 'mediumDate' }}</td>
                                            
-                                             <td>
+                                             <td data-label="Company">
                                                 <span class="font-weight-bold d-block text-sm">{{
                                                     item.companyName }}</span>
                                                 <span class="text-muted text-xs">{{ item.firstName }} {{ item.lastName
                                                     }}</span>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isPaid === true,
                                                     'badge-warning text-white': item.isPaid === false
@@ -223,13 +215,13 @@
                                                     {{ item.isPaid ? 'Paid' : 'Pending' }}
                                                 </span>
                                             </td>
-                                            <td class="text-right font-weight-bold text-primary">
+                                            <td class="text-right font-weight-bold text-primary" data-label="Total Amount">
                                                 {{ item.subTotal | currency }}
                                             </td>
-                                            <td class="text-right font-weight-bold text-primary">
+                                            <td class="text-right font-weight-bold text-primary" data-label="Paid Amount">
                                                 {{ item.amount | currency }}
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" title="View Purchase"
                                                         (click)="viewPurchase(item)">
@@ -335,7 +327,6 @@
                         <h6 class="mb-0">{{ selectedPurchase.companyName || getPurchaseVendorName() }}</h6>
                         <p class="text-muted small mb-0">
                             {{ getPurchaseContactName() }}<br>
-                            Vendor ID: {{ selectedPurchase.vendorId }}
                         </p>
                     </div>
                     <div class="col-sm-6 text-right">
@@ -348,10 +339,9 @@
                     </div>
                 </div>
 
-                <table class="table table-sm table-striped border">
+                <table class="table table-sm table-striped border mobile-card-table">
                     <thead class="bg-light">
                         <tr>
-                            <th>#</th>
                             <th>Product Description</th>
                             <th class="text-center">Qty</th>
                             <th class="text-right">Unit Cost</th>
@@ -362,23 +352,22 @@
                     <tbody>
                         @if (getSelectedPurchaseItems().length > 0) {
                         <tr *ngFor="let item of getSelectedPurchaseItems(); let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ getDetailItemName(item) }}</td>
-                            <td class="text-center">{{ item.quantity }}</td>
-                            <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
-                            <!-- <td>{{ getDetailItemSerials(item) || '-' }}</td> -->
-                            <td class="text-right font-weight-bold">{{ getDetailItemTotal(item) | number:'1.2-2' }}</td>
+                            <td data-label="Product Description">{{ getDetailItemName(item) }}</td>
+                            <td class="text-center" data-label="Qty">{{ item.quantity }}</td>
+                            <td class="text-right" data-label="Unit Cost">{{ item.unitCost | number:'1.2-2' }}</td>
+                            <!-- <td data-label="Serials">{{ getDetailItemSerials(item) || '-' }}</td> -->
+                            <td class="text-right font-weight-bold" data-label="Subtotal">{{ getDetailItemTotal(item) | number:'1.2-2' }}</td>
                         </tr>
                         } @else {
                         <tr>
-                            <td>1</td>
-                            <td>
+                            <td data-label="#">1</td>
+                            <td data-label="Product Description">
                                 {{ selectedPurchase.purchaseNumber }}
                                 <small class="text-muted d-block">Item details are not available from the list response.</small>
                             </td>
-                            <td class="text-center">-</td>
-                            <td class="text-right">-</td>
-                            <td class="text-right font-weight-bold">{{ getPurchaseTotal() | number:'1.2-2' }}</td>
+                            <td class="text-center" data-label="Qty">-</td>
+                            <td class="text-right" data-label="Unit Cost">-</td>
+                            <td class="text-right font-weight-bold" data-label="Serials">{{ getPurchaseTotal() | number:'1.2-2' }}</td>
                         </tr>
                         }
                     </tbody>

@@ -1,0 +1,72 @@
+@if (loading) {
+<div class="text-center p-5">
+    <div class="spinner-border text-info mb-3" role="status"></div>
+    <p class="text-muted mb-0">Loading report...</p>
+</div>
+} @else if (rows.length === 0) {
+<div class="text-center py-5">
+    <i class="fas fa-table fa-3x text-muted mb-3"></i>
+    <p class="text-bold text-muted mb-0">No report rows found.</p>
+</div>
+} @else {
+<div class="table-responsive">
+    <table class="table table-hover table-valign-middle mobile-card-table mb-0">
+        <thead class="bg-light">
+            <tr>
+                @for (column of columns; track column.key) {
+                <th [class.text-center]="column.align === 'center'" [class.text-right]="column.align === 'right'">
+                    <button type="button" class="btn btn-link p-0 text-dark font-weight-bold" [disabled]="!column.sortable" (click)="sort(column)">
+                        {{ column.label }}
+                        @if (sortBy === column.key) {
+                        <i class="fas" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                        }
+                    </button>
+                </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (row of rows; track $index) {
+            <tr [ngClass]="rowClass(row)">
+                @for (column of columns; track column.key) {
+                <td [attr.data-label]="column.label" [class.text-center]="column.align === 'center'" [class.text-right]="column.align === 'right'">
+                    @if (column.type === 'date') {
+                    {{ getCell(row, column.key) ? (getCell(row, column.key) | date:'mediumDate') : '-' }}
+                    } @else if (column.type === 'number') {
+                    {{ (getCell(row, column.key) || 0) | number:'1.2-2' }}
+                    } @else if (column.type === 'status') {
+                    <span class="badge px-2 py-1" [ngClass]="statusClass(getCell(row, column.key))">{{ getCell(row, column.key) || '-' }}</span>
+                    } @else if (column.type === 'boolean') {
+                    <span class="badge" [ngClass]="getCell(row, column.key) ? 'badge-danger' : 'badge-success'">
+                        {{ getCell(row, column.key) ? 'Yes' : 'No' }}
+                    </span>
+                    } @else {
+                    {{ getCell(row, column.key) || '-' }}
+                    }
+                </td>
+                }
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="card-footer bg-white border-top">
+    <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div class="text-muted small">
+            Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of <b>{{ totalCount }}</b>
+        </div>
+        <ul class="pagination pagination-sm m-0 mt-2 mt-sm-0">
+            <li class="page-item" [class.disabled]="page === 1">
+                <button class="page-link" type="button" (click)="changePage(page - 1)">Previous</button>
+            </li>
+            <li class="page-item active">
+                <span class="page-link bg-info border-info">{{ page }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="page >= totalPages">
+                <button class="page-link" type="button" (click)="changePage(page + 1)">Next</button>
+            </li>
+        </ul>
+    </div>
+</div>
+}

@@ -4,16 +4,17 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 
 export enum CashAccountType {
-    // Add your enum values here
-    Cash = 0,
-    Bank = 1,
-    MobileBank = 2
+    Cash = 1,
+    Bank = 2,
+    MobileBanking = 3,
+    Others = 4
 }
 
 export enum MobileBankType {
-    Bkash = 0,
-    Nagad = 1,
-    Rocket = 2
+    Bkash = 1,
+    Nagad = 2,
+    Rocket = 3,
+    Others = 4
 }
 
 export interface CashAccountDto {
@@ -55,6 +56,10 @@ export class CashAccountService {
 
     update(id: number, data: Partial<CashAccountDto>): Observable<CashAccountDto> {
         return this.http.put<CashAccountDto>(`${this.apiUrl}/${id}`, data);
+    }
+
+    setDefault(id: number): Observable<{ success: boolean; message: string }> {
+        return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/${id}/set-default`, {});
     }
 
     delete(id: number): Observable<void> {

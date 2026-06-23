@@ -1,0 +1,94 @@
+.cash-history-modal {
+  overflow: hidden;
+}
+
+.cash-history-header {
+  align-items: flex-start;
+}
+
+.history-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.history-account-strip,
+.history-detail-panel {
+  background: #fff;
+  border: 1px solid #e5edf2;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 12px 14px;
+}
+
+.history-account-icon {
+  align-items: center;
+  background: #e8f7fa;
+  border-radius: 6px;
+  color: #17a2b8;
+  display: flex;
+  font-size: 1.25rem;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.history-account-name {
+  color: #212529;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.history-account-meta {
+  color: #6c757d;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.history-balance-tile {
+  background: #fff;
+  border: 1px solid #e5edf2;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  min-height: 82px;
+  padding: 12px 14px;
+}
+
+.history-balance-current {
+  border-left: 4px solid #17a2b8;
+}
+
+.history-tile-label {
+  color: #6c757d;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.history-tile-value {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.history-table-wrap {
+  border: 1px solid #e5edf2;
+}
+
+@media (max-width: 991.98px) {
+  .history-balance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .history-balance-grid {
+    grid-template-columns: 1fr;
+  }
+}

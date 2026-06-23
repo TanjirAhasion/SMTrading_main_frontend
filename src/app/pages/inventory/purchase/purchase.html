@@ -118,11 +118,13 @@
             </div>
             <div class="card-body p-0">
               <div class="table-responsive">
-                <table class="table table-striped table-valign-middle mb-0">
+                <table class="table table-striped table-valign-middle mb-0 mobile-card-table">
                   <thead>
                     <tr>
                       <th>Product</th>
                       <th style="width: 130px;">Unit Cost</th>
+                      <th style="width: 130px;">Sell Price</th>
+                      <th style="width: 130px;">Rental Price</th>
                       <th style="width: 100px;">Qty</th>
                       <th style="width: 120px;" class="text-right">Subtotal</th>
                       <th style="width: 40px;"></th>
@@ -131,25 +133,33 @@
                   <tbody>
                     @for (item of request.items; track $index; let i = $index) {
                     <tr>
-                      <td>
+                      <td data-label="Product">
                         <select class="form-control form-control-sm" [(ngModel)]="item.productId"
                           (ngModelChange)="onProductChange(i)" [ngClass]="{'is-invalid': item.productId <= 0}">
                           <option [ngValue]="0">-- Select Product --</option>
                           <option *ngFor="let p of products" [value]="p.id">{{p.name}} ({{p.model}})</option>
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Unit Cost">
                         <input type="number" class="form-control form-control-sm" [(ngModel)]="item.unitCost"
                           (input)="calculateTotals()" [ngClass]="{'is-invalid': item.unitCost <= 0}">
                       </td>
-                      <td>
+                      <td data-label="Sell Price">
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.sellingCost"
+                          [ngClass]="{'is-invalid': item.sellingCost < 0}">
+                      </td>
+                      <td data-label="Rental Price">
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.rentalCost"
+                          [ngClass]="{'is-invalid': item.rentalCost < 0}">
+                      </td>
+                      <td data-label="Qty">
                         <input type="number" class="form-control form-control-sm" [(ngModel)]="item.quantity"
                           (input)="calculateTotals()" [ngClass]="{'is-invalid': item.quantity < 1}">
                       </td>
-                      <td class="text-right">
+                      <td class="text-right" data-label="Subtotal">
                         <strong>{{ (item.unitCost * item.quantity) | number:'1.2-2' }}</strong>
                       </td>
-                      <td class="text-center text-danger">
+                      <td class="text-center text-danger" data-label="Actions">
                         <i class="fas fa-trash cursor-pointer" (click)="removeItem(i)"></i>
                       </td>
                     </tr>
@@ -165,7 +175,8 @@
         @if (request.vendorId > 0) {
         <div class="col-md-3 animate__animated animate__fadeInRight">
 
-          <div class="info-box mb-3 bg-warning shadow-sm" *ngIf="vendorDueAmount > 0">
+          <div class="info-box mb-3 shadow-sm" *ngIf="selectedVendor"
+            [ngClass]="vendorDueAmount > 0 ? 'bg-warning' : 'bg-success'">
             <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Previous Due Balance</span>
@@ -245,14 +256,25 @@
                     Paid amount cannot be more than current balance {{ selectedCashAccountBalance | number:'1.2-2' }}.
                   </span>
                   }
+                  @if (isPaidAmountOverVendorDue) {
+                  <span class="text-danger small d-block">
+                    Paid amount cannot be more than total due {{ totalDuePayable | number:'1.2-2' }}.
+                  </span>
+                  }
                 </div>
 
                 <div class="border-top mt-3 pt-2">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-muted">Total Due With Previous:</span>
+                    <span class="font-weight-bold h6 mb-0 text-dark">
+                      {{ totalDuePayable | currency }}
+                    </span>
+                  </div>
                   <div class="d-flex justify-content-between align-items-center">
                     <span class="small text-muted">Remaining Due:</span>
-                    <span [ngClass]="(request.totalAmount - request.paidAmount) > 0 ? 'text-danger' : 'text-success'"
+                    <span [ngClass]="remainingVendorDue > 0 ? 'text-danger' : 'text-success'"
                       class="font-weight-bold h6 mb-0">
-                      {{ (request.totalAmount - request.paidAmount) | currency }}
+                      {{ remainingVendorDue | currency }}
                     </span>
                   </div>
                 </div>
@@ -319,23 +341,25 @@
           </div>
         </div>
 
-        <table class="table table-sm table-striped border">
+        <table class="table table-sm table-striped border mobile-card-table">
           <thead class="bg-light">
             <tr>
-              <th>#</th>
               <th>Product Description</th>
               <th class="text-center">Qty</th>
               <th class="text-right">Unit Cost</th>
+              <th class="text-right">Sell Price</th>
+              <th class="text-right">Rental Price</th>
               <th class="text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of request.items; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ getProductName(item.productId) }}</td>
-              <td class="text-center">{{ item.quantity }}</td>
-              <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
-              <td class="text-right font-weight-bold">{{ (item.unitCost * item.quantity) | number:'1.2-2' }}</td>
+              <td data-label="Product Description">{{ getProductName(item.productId) }}</td>
+              <td class="text-center" data-label="Qty">{{ item.quantity }}</td>
+              <td class="text-right" data-label="Unit Cost">{{ item.unitCost | number:'1.2-2' }}</td>
+              <td class="text-right" data-label="Sell Price">{{ item.sellingCost | number:'1.2-2' }}</td>
+              <td class="text-right" data-label="Rental Price">{{ item.rentalCost | number:'1.2-2' }}</td>
+              <td class="text-right font-weight-bold" data-label="Subtotal">{{ (item.unitCost * item.quantity) | number:'1.2-2' }}</td>
             </tr>
           </tbody>
         </table>
@@ -359,11 +383,15 @@
                 <th class="text-muted">Amount Paid:</th>
                 <td class="text-right text-success font-weight-bold">{{ request.paidAmount | number:'1.2-2' }}</td>
               </tr>
+              <tr>
+                <th class="text-muted">Previous Due:</th>
+                <td class="text-right text-warning font-weight-bold">{{ vendorDueAmount | number:'1.2-2' }}</td>
+              </tr>
               <tr class="bg-light">
                 <th>Balance Due:</th>
                 <td class="text-right text-bold"
-                  [ngClass]="(request.totalAmount - request.paidAmount) > 0 ? 'text-danger' : 'text-success'">
-                  {{ (request.totalAmount - request.paidAmount) | number:'1.2-2' }}
+                  [ngClass]="remainingVendorDue > 0 ? 'text-danger' : 'text-success'">
+                  {{ remainingVendorDue | number:'1.2-2' }}
                 </td>
               </tr>
             </table>

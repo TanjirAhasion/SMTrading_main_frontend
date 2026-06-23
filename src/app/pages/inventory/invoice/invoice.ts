@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../service/item/product.service';
 import { ProductSerialService } from '../../../service/item/product-serial.service';
 import { CashAccountDto, CashAccountService } from '../../../service/cash-management/cash-account.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-invoice',
@@ -23,6 +24,7 @@ export class InvoiceComponent implements OnInit {
   private productService = inject(ProductService);
   private productSerialService = inject(ProductSerialService);
   private cashAccountService = inject(CashAccountService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   // =========================
   // DATA
@@ -33,7 +35,7 @@ export class InvoiceComponent implements OnInit {
   selectedProduct: any = null;
 
   selectedCustomer: Customer | null = null;
-  customerDueAmount: number = 0; // In a real app, fetch this from a 'CustomerBalance' API
+  customerDueAmount: number = 0;
 
   saleDate: string = new Date().toISOString().split('T')[0];
   showConfirmation = false;
@@ -47,6 +49,7 @@ export class InvoiceComponent implements OnInit {
     discount: 0,
     totalAmount: 0,
     paidAmount: 0,
+    salesInvoiceDate: new Date().toISOString().split('T')[0],
     cashAccountId: 0,
     paymentMethod: '',
     items: []
@@ -59,6 +62,7 @@ export class InvoiceComponent implements OnInit {
   serials: any[] = [];
   selectedSerials: any[] = [];
   serialSearch: string = '';
+  private readonly inStockSerialStatus = 1;
 
   // =========================
   // INIT
@@ -82,6 +86,24 @@ export class InvoiceComponent implements OnInit {
 
   get selectedCashAccount(): CashAccountDto | undefined {
     return this.cashAccounts.find((account) => account.id === Number(this.request.cashAccountId));
+  }
+
+  get totalDuePayable(): number {
+    return Math.max(0, Number(this.customerDueAmount) + Number(this.request.totalAmount));
+  }
+
+  get remainingCustomerDue(): number {
+    return this.totalDuePayable - (Number(this.request.paidAmount) || 0);
+  }
+
+  get availableSerials(): any[] {
+    return this.serials.filter(serial => !this.isSelected(serial));
+  }
+
+  get isPaidAmountOverCustomerDue(): boolean {
+    if (!this.request.paidAmount) return false;
+
+    return Number(this.request.paidAmount) > this.totalDuePayable;
   }
 
   onCashAccountChange() {
@@ -125,7 +147,20 @@ onCustomerChange(customerId: any) {
   this.selectedCustomer =
     this.customers.find(c => c.id === id) || null;
 
-  this.customerDueAmount = this.selectedCustomer ? 500 : 0;
+  this.customerDueAmount = Number(this.selectedCustomer?.dueAmount) || 0;
+
+  if (this.selectedCustomer) {
+    this.customerService.getById(this.selectedCustomer.id).subscribe({
+      next: (customer) => {
+        this.selectedCustomer = customer;
+        this.customerDueAmount = Number(customer?.dueAmount) || 0;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading customer balance', err);
+      }
+    });
+  }
 }
 
   // =========================
@@ -195,11 +230,13 @@ onCustomerChange(customerId: any) {
   }
 
   loadSerials() {
-    if (!this.serialSearch || this.serialSearch.length < 3) {
-      this.serials = []; // optional: clear list
+    const search = this.serialSearch.trim();
+    if (search.length > 0 && search.length < 3) {
+      this.serials = [];
       return;
     }
-    this.productSerialService.getSerials(1, 50, this.serialSearch)
+
+    this.productSerialService.getSerials(1, 10, search, this.inStockSerialStatus)
       .subscribe({
         next: (res) => {
           this.serials = res.items || [];
@@ -211,13 +248,19 @@ onCustomerChange(customerId: any) {
 
   onSearchChange(value: string) {
     this.serialSearch = value;
+    const search = value.trim();
 
-    if (!value || value.length < 3) {
+    if (!search) {
+      this.loadSerials();
+      return;
+    }
+
+    if (search.length < 3) {
       this.serials = [];
       return;
     }
 
-    this.productSerialService.getSerials(1, 20, value)
+    this.productSerialService.getSerials(1, 10, search, this.inStockSerialStatus)
       .subscribe(res => {
         this.serials = res.items || [];
         this.cdr.detectChanges();
@@ -252,12 +295,13 @@ onCustomerChange(customerId: any) {
     this.selectedSerials.push(serial);
 
     this.serialSearch = '';
-    this.serials = [];
+    this.loadSerials();
   }
 
   removeSerial(serial: any) {
     this.selectedSerials =
       this.selectedSerials.filter(s => s.id !== serial.id);
+    this.loadSerials();
   }
 
   applySerials() {
@@ -316,6 +360,11 @@ onCustomerChange(customerId: any) {
       return;
     }
 
+    if (this.isPaidAmountOverCustomerDue) {
+      alert(`Paid amount cannot be more than total due ${this.totalDuePayable.toFixed(2)}.`);
+      return;
+    }
+
       for (let item of this.request.items) {
       if ((item.serialNumbers?.length || 0) !== item.quantity) {
         alert(`Serial mismatch in ${this.getProductName(item.productId)}`);
@@ -327,13 +376,20 @@ onCustomerChange(customerId: any) {
   }
 
   submitSale() {
+    if (this.isPaidAmountOverCustomerDue) {
+      this.showConfirmation = false;
+      alert(`Paid amount cannot be more than total due ${this.totalDuePayable.toFixed(2)}.`);
+      return;
+    }
+
     this.showConfirmation = false;
     this.onCashAccountChange();
+    this.request.salesInvoiceDate = this.saleDate;
 
     this.invoiceService.createInvoice(this.request).subscribe({
       next: (id) => {
         alert(`Invoice #${id} created successfully!`);
-        this.resetForm();
+        this.router.navigate(['/inventory/invoicelist']);
       },
       error: (err) => console.error(err)
     });
@@ -350,6 +406,7 @@ onCustomerChange(customerId: any) {
       discount: 0,
       totalAmount: 0,
       paidAmount: 0,
+      salesInvoiceDate: new Date().toISOString().split('T')[0],
       cashAccountId: 0,
       paymentMethod: '',
       items: []

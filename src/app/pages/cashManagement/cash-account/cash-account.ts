@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -10,8 +10,13 @@ import {
 import { PdfService } from '../../../service/common/pdf.service';
 import { ExcelService } from '../../../service/common/excel.service';
 import { PrintService } from '../../../service/common/print.service';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
+import {
+  CashTransactionDto,
+  CashTransactionService,
+  TransactionSource,
+  TransactionType
+} from '../../../service/cash-management/cash-transaction.service';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 @Component({
   selector: 'app-cash-account',
@@ -20,38 +25,44 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   templateUrl: './cash-account.html',
   styleUrl: './cash-account.css',
 })
-export class CashAccount implements OnInit {
+export class CashAccount implements OnInit, OnDestroy {
   accounts: CashAccountDto[] = [];
   account: Partial<CashAccountDto> = this.getEmptyAccount();
   showForm = false;
+  showHistoryModal = false;
   loading = false;
+  historyLoading = false;
   isEditMode = false;
   selectedId: number | null = null;
+  selectedHistoryAccount: CashAccountDto | null = null;
+  selectedHistoryTransaction: CashTransactionDto | null = null;
+  historyTransactions: CashTransactionDto[] = [];
+  historyPage = 1;
+  historyPageSize = 10;
+  historyTotalCount = 0;
+  historyTotalPages = 1;
   search = '';
   page = 1;
   pageSize = 10;
   accountTypes = [
     { value: CashAccountType.Cash, label: 'Cash' },
     { value: CashAccountType.Bank, label: 'Bank' },
-    { value: CashAccountType.MobileBank, label: 'Mobile Bank' }
+    { value: CashAccountType.MobileBanking, label: 'Mobile Bank' },
+    { value: CashAccountType.Others, label: 'Others' }
   ];
   mobileBankTypes = [
     { value: MobileBankType.Bkash, label: 'Bkash' },
     { value: MobileBankType.Nagad, label: 'Nagad' },
-    { value: MobileBankType.Rocket, label: 'Rocket' }
+    { value: MobileBankType.Rocket, label: 'Rocket' },
+    { value: MobileBankType.Others, label: 'Others' }
   ];
   readonly cashAccountType = CashAccountType;
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  toast: ToastState = createEmptyToast();
+  private readonly toastController = new ToastController();
 
   constructor(
     private cashAccountService: CashAccountService,
+    private cashTransactionService: CashTransactionService,
     private pdfService: PdfService,
     private excelService: ExcelService,
     private printService: PrintService,
@@ -60,6 +71,10 @@ export class CashAccount implements OnInit {
 
   ngOnInit(): void {
     this.loadAccounts();
+  }
+
+  ngOnDestroy(): void {
+    this.toastController.destroy();
   }
 
   get filteredAccounts(): CashAccountDto[] {
@@ -113,6 +128,30 @@ export class CashAccount implements OnInit {
     return this.accounts.reduce((total, item) => total + (Number(item.currentBalance) || 0), 0);
   }
 
+  get historyPageCashIn(): number {
+    return this.historyTransactions
+      .filter((item) => Number(item.transactionType) === TransactionType.CashIn)
+      .reduce((total, item) => total + (Number(item.amount) || 0), 0);
+  }
+
+  get historyPageCashOut(): number {
+    return this.historyTransactions
+      .filter((item) => Number(item.transactionType) === TransactionType.CashOut)
+      .reduce((total, item) => total + (Number(item.amount) || 0), 0);
+  }
+
+  get historyPageNetChange(): number {
+    return this.historyPageCashIn - this.historyPageCashOut;
+  }
+
+  get historyAccountOpeningBalance(): number {
+    return Number(this.selectedHistoryAccount?.openingBalance) || 0;
+  }
+
+  get historyAccountCurrentBalance(): number {
+    return Number(this.selectedHistoryAccount?.currentBalance) || 0;
+  }
+
   loadAccounts(): void {
     this.loading = true;
     this.cashAccountService.getAll().subscribe({
@@ -146,7 +185,7 @@ export class CashAccount implements OnInit {
   }
 
   onAccountTypeChange(): void {
-    if (this.account.accountType !== CashAccountType.MobileBank) {
+    if (this.account.accountType !== CashAccountType.MobileBanking) {
       this.account.mobileBankType = null;
     }
 
@@ -242,16 +281,17 @@ export class CashAccount implements OnInit {
       return;
     }
 
+    const openingBalance = Number(this.account.openingBalance) || 0;
     const payload: Partial<CashAccountDto> = {
       ...this.account,
       name: this.account.name.trim(),
-      openingBalance: Number(this.account.openingBalance) || 0,
-      currentBalance: Number(this.account.currentBalance) || 0,
-      isDefault: this.account.isDefault ?? false,
+      openingBalance,
+      currentBalance: this.isEditMode ? (Number(this.account.currentBalance) || 0) : openingBalance,
+      isDefault: this.isEditMode ? (this.account.isDefault ?? false) : false,
       isActive: this.account.isActive ?? true
     };
 
-    if (payload.accountType !== CashAccountType.MobileBank) {
+    if (payload.accountType !== CashAccountType.MobileBanking) {
       payload.mobileBankType = null;
     }
 
@@ -289,6 +329,85 @@ export class CashAccount implements OnInit {
     }
   }
 
+  setDefault(item: CashAccountDto): void {
+    if (item.isDefault) return;
+
+    if (!confirm(`Set "${item.name}" as the default cash account?`)) return;
+
+    this.cashAccountService.setDefault(item.id).subscribe({
+      next: () => {
+        this.loadAccounts();
+        this.showToast('success', 'Default Updated', 'Default cash account updated successfully.');
+      },
+      error: (err) => {
+        console.error('Error setting default cash account', err);
+        this.showToast('danger', 'Update Failed', 'Unable to set default cash account.');
+      }
+    });
+  }
+
+  openHistory(item: CashAccountDto): void {
+    this.selectedHistoryAccount = item;
+    this.historyPage = 1;
+    this.historyTransactions = [];
+    this.showHistoryModal = true;
+    this.loadHistory();
+  }
+
+  closeHistory(): void {
+    this.showHistoryModal = false;
+    this.selectedHistoryAccount = null;
+    this.selectedHistoryTransaction = null;
+    this.historyTransactions = [];
+  }
+
+  loadHistory(): void {
+    if (!this.selectedHistoryAccount) return;
+
+    this.historyLoading = true;
+    this.cashTransactionService.getCashFlowHistory({
+      page: this.historyPage,
+      pageSize: this.historyPageSize,
+      cashAccountId: this.selectedHistoryAccount.id,
+      defaultToday: false
+    }).subscribe({
+      next: (result) => {
+        this.historyTransactions = result.items || [];
+        this.historyTotalCount = result.totalCount || 0;
+        this.historyTotalPages = Math.max(1, result.totalPages || Math.ceil(this.historyTotalCount / this.historyPageSize));
+        this.historyLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading cash account transaction history', err);
+        this.historyLoading = false;
+        this.showToast('danger', 'Load Failed', 'Unable to load transaction history.');
+      }
+    });
+  }
+
+  onHistoryPageChange(newPage: number): void {
+    if (newPage < 1 || newPage > this.historyTotalPages) return;
+
+    this.historyPage = newPage;
+    this.selectedHistoryTransaction = null;
+    this.loadHistory();
+  }
+
+  onHistoryPageSizeChange(): void {
+    this.historyPage = 1;
+    this.selectedHistoryTransaction = null;
+    this.loadHistory();
+  }
+
+  viewHistoryDetails(item: CashTransactionDto): void {
+    this.selectedHistoryTransaction = item;
+  }
+
+  closeHistoryDetails(): void {
+    this.selectedHistoryTransaction = null;
+  }
+
   resetForm(): void {
     this.isEditMode = false;
     this.selectedId = null;
@@ -300,17 +419,71 @@ export class CashAccount implements OnInit {
 
     if (item.accountType === CashAccountType.Cash) return 'Cash';
     if (item.accountType === CashAccountType.Bank) return 'Bank';
-    if (item.accountType === CashAccountType.MobileBank) {
+    if (item.accountType === CashAccountType.MobileBanking) {
       return item.mobileBankTypeName ? `Mobile Bank (${item.mobileBankTypeName})` : 'Mobile Bank';
     }
 
-    return '-';
+    if (item.accountType === CashAccountType.Others) return 'Others';
+
+    return item.accountTypeName || '-';
   }
 
   getAccountIcon(item: Partial<CashAccountDto>): string {
     if (item.accountType === CashAccountType.Bank) return 'fas fa-university';
-    if (item.accountType === CashAccountType.MobileBank) return 'fas fa-mobile-alt';
+    if (item.accountType === CashAccountType.MobileBanking) return 'fas fa-mobile-alt';
     return 'fas fa-wallet';
+  }
+
+  getHistoryPageStart(): number {
+    return this.historyTotalCount === 0 ? 0 : ((Math.min(this.historyPage, this.historyTotalPages) - 1) * this.historyPageSize) + 1;
+  }
+
+  getHistoryPageEnd(): number {
+    return Math.min(Math.min(this.historyPage, this.historyTotalPages) * this.historyPageSize, this.historyTotalCount);
+  }
+
+  getTransactionTypeName(type: number | undefined): string {
+    if (Number(type) === TransactionType.CashOut) return 'Cash Out';
+    if (Number(type) === TransactionType.CashIn) return 'Cash In';
+    return '-';
+  }
+
+  getTransactionBadgeClass(type: number | undefined): string {
+    return Number(type) === TransactionType.CashOut ? 'badge-danger' : 'badge-success';
+  }
+
+  getSourceTypeName(type: number | undefined): string {
+    const names: Record<number, string> = {
+      [TransactionSource.SalePayment]: 'Sale Payment',
+      [TransactionSource.SaleDueCollection]: 'Sale Due Collection',
+      [TransactionSource.PurchasePayment]: 'Purchase Payment',
+      [TransactionSource.PurchaseDuePayment]: 'Purchase Due Payment',
+      [TransactionSource.VendorPayment]: 'Vendor Payment',
+      [TransactionSource.RentalIncome]: 'Rental Income',
+      [TransactionSource.RentalSecurityDeposit]: 'Rental Security Deposit',
+      [TransactionSource.Expense]: 'Expense',
+      [TransactionSource.Salary]: 'Salary',
+      [TransactionSource.ShopRent]: 'Shop Rent',
+      [TransactionSource.CashTransfer]: 'Cash Transfer',
+      [TransactionSource.OpeningBalance]: 'Opening Balance',
+      [TransactionSource.Adjustment]: 'Adjustment',
+      [TransactionSource.Other]: 'Other'
+    };
+
+    return names[Number(type)] || '-';
+  }
+
+  formatDate(value: string | Date | undefined): string {
+    if (!value) return '-';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 
   formatNumber(value: number | undefined): string {
@@ -342,29 +515,10 @@ export class CashAccount implements OnInit {
   }
 
   showToast(type: ToastType, title: string, message: string): void {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = { show: true, type, title, message, icon: icons[type] };
-
-    this.toastTimer = setTimeout(() => {
-      this.closeToast();
-    }, 3500);
+    this.toastController.show(type, title, message, (toast) => this.toast = toast, () => this.closeToast());
   }
 
   closeToast(): void {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+    this.toastController.close((toast) => this.toast = toast);
   }
 }

@@ -77,7 +77,7 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Name or status..." [(ngModel)]="search" (keyup.enter)="onSearch()">
+                                    placeholder="Name or status..." [(ngModel)]="search">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-info" (click)="onSearch()">
                                         <i class="fas fa-search mr-1"></i> Search
@@ -132,10 +132,9 @@
 
                             @if (!loading && pagedCategories.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 220px;">Category</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center pr-3">Actions</th>
@@ -144,19 +143,17 @@
                                     <tbody>
                                         @for (item of pagedCategories; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Category">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-receipt fa-lg"></i>
                                                     </div>
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ item.name }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{ item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isActive,
                                                     'badge-secondary': !item.isActive
@@ -165,7 +162,7 @@
                                                     {{ item.isActive ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Category">
@@ -236,7 +233,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title font-weight-light">
+                    <h5 class="modal-title font-weight-bold">
                         <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
                         <span class="ml-2">{{ isEditMode ? 'Edit Expense Category' : 'Add Expense Category' }}</span>
                     </h5>
@@ -282,7 +279,7 @@
 
                 <div class="modal-footer bg-white border-0 justify-content-between">
                     <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
-                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveCategory()"
+                    <button type="button" class="btn btn-info px-4 shadow-sm" (click)="saveCategory()"
                         [disabled]="categoryForm.invalid">
                         <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Category' : 'Save Category' }}
                     </button>

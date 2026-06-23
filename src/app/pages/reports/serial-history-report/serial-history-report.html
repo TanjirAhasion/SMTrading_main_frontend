@@ -1,0 +1,111 @@
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <h1 class="m-0 font-weight-bold"><i class="fas fa-stream mr-2 text-info"></i>Serial History</h1>
+        </div>
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body py-3">
+                    <form [formGroup]="searchForm" class="row align-items-end">
+                        <div class="col-md-5 mb-2">
+                            <label>Serial Number</label>
+                            <div class="position-relative">
+                                <input class="form-control" [ngModel]="serialLookupText"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    (ngModelChange)="onSerialLookupChange($event)"
+                                    (focus)="openSerialDropdown()"
+                                    (blur)="closeSerialDropdown()"
+                                    placeholder="Type 3 or more characters...">
+                                @if (serialLookupLoading) {
+                                <small class="text-muted d-block mt-1">Loading serials...</small>
+                                }
+                                @if (serialDropdownOpen && serialOptions.length > 0) {
+                                <div class="border rounded bg-white shadow-sm mt-1 position-absolute w-100"
+                                    style="z-index: 10; max-height: 220px; overflow-y: auto;">
+                                    @for (serial of serialOptions; track serial.id) {
+                                    <button type="button" class="dropdown-item py-2" (click)="selectSerial(serial)">
+                                        <strong>{{ serial.serialNumber }}</strong>
+                                        <small class="d-block text-muted">{{ serial.productName }} | {{ serial.model }}</small>
+                                    </button>
+                                    }
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <button type="button" class="btn btn-info btn-block" (click)="loadReport()">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (loading) {
+            <div class="card"><div class="card-body text-center p-5"><div class="spinner-border text-info"></div></div></div>
+            } @else if (searched && !report) {
+            <div class="card"><div class="card-body text-center py-5 text-muted">No serial history found.</div></div>
+            } @else if (report) {
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-header"><h3 class="card-title font-weight-bold">Current Status</h3></div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Serial</dt><dd class="col-sm-7">{{ report.serial?.serialNumber || '-' }}</dd>
+                                <dt class="col-sm-5">Product</dt><dd class="col-sm-7">{{ report.serial?.productName || report.serial?.product || '-' }}</dd>
+                                <dt class="col-sm-5">Status</dt><dd class="col-sm-7"><span class="badge badge-info">{{ report.serial?.statusName || report.serial?.status || '-' }}</span></dd>
+                                <dt class="col-sm-5">{{ getPartyLabel(report.serial) }}</dt><dd class="col-sm-7">{{ getPartyName(report.serial) }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="card card-outline card-secondary shadow-sm">
+                        <div class="card-header"><h3 class="card-title font-weight-bold">Images</h3></div>
+                        <div class="card-body">
+                            @if (report.images.length === 0) {
+                            <p class="text-muted mb-0">No images attached.</p>
+                            } @else {
+                            <div class="row">
+                                @for (image of report.images; track image.id) {
+                                <div class="col-6 mb-3">
+                                    <a [href]="image.imageUrl" target="_blank" class="d-block border rounded overflow-hidden">
+                                        <img [src]="image.imageUrl" class="img-fluid" [alt]="image.notes || image.imageTypeName">
+                                    </a>
+                                    <small class="text-muted d-block mt-1">{{ image.imageTypeName }}</small>
+                                </div>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="card card-outline card-info shadow-sm">
+                        <div class="card-header"><h3 class="card-title font-weight-bold">Lifecycle Timeline</h3></div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                @for (item of report.timeline; track $index) {
+                                <div>
+                                    <i class="fas fa-history bg-info"></i>
+                                    <div class="timeline-item">
+                                        <span class="time"><i class="far fa-clock"></i> {{ item.date | date:'mediumDate' }}</span>
+                                        <h3 class="timeline-header font-weight-bold">{{ item.actionTypeName }}</h3>
+                                        <div class="timeline-body">
+                                            <div><b>Reference:</b> {{ item.referenceNo || '-' }}</div>
+                                            <div><b>{{ getPartyLabel(item) }}:</b> {{ getPartyName(item) }}</div>
+                                            <div><b>Remarks:</b> {{ item.remarks || '-' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                                <div><i class="far fa-clock bg-gray"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </section>
+</div>

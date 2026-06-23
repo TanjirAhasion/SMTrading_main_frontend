@@ -1,0 +1,92 @@
+[1m[33mOption 'port' has been specified multiple times. The value '4300' will be used.[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.html:319:81:
+[37m      319 │ ...       @if (account.accountType === cashAccountType.[32mMobileBank[37m) {
+          ╵                                                        [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component CashAccount.
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:20:15:
+[37m      20 │   templateUrl: [32m'./cash-account.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:36:29:
+[37m      36 │     { value: CashAccountType.[32mMobileBank[37m, label: 'Mobile Bank' }
+         ╵                              [32m~~~~~~~~~~[0m
+
+  'MobileBanking' is declared here.
+
+    src/app/service/cash-management/cash-account.service.ts:9:4:
+[37m      9 │     [32mMobileBanking[37m = 3,
+        ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:149:53:
+[37m      149 │     if (this.account.accountType !== CashAccountType.[32mMobileBank[37m) {
+          ╵                                                      [32m~~~~~~~~~~[0m
+
+  'MobileBanking' is declared here.
+
+    src/app/service/cash-management/cash-account.service.ts:9:4:
+[37m      9 │     [32mMobileBanking[37m = 3,
+        ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:255:48:
+[37m      255 │     if (payload.accountType !== CashAccountType.[32mMobileBank[37m) {
+          ╵                                                 [32m~~~~~~~~~~[0m
+
+  'MobileBanking' is declared here.
+
+    src/app/service/cash-management/cash-account.service.ts:9:4:
+[37m      9 │     [32mMobileBanking[37m = 3,
+        ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:321:45:
+[37m      321 │     if (item.accountType === CashAccountType.[32mMobileBank[37m) {
+          ╵                                              [32m~~~~~~~~~~[0m
+
+  'MobileBanking' is declared here.
+
+    src/app/service/cash-management/cash-account.service.ts:9:4:
+[37m      9 │     [32mMobileBanking[37m = 3,
+        ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:330:45:
+[37m      330 │ ...tType === CashAccountType.[32mMobileBank[37m) return 'fas fa-mobile-alt';
+          ╵                              [32m~~~~~~~~~~[0m
+
+  'MobileBanking' is declared here.
+
+    src/app/service/cash-management/cash-account.service.ts:9:4:
+[37m      9 │     [32mMobileBanking[37m = 3,
+        ╵     [32m~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'MobileBank' does not exist on type 'typeof CashAccountType'. Did you mean 'MobileBanking'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/cashManagement/cash-account/cash-account.html:319:81:
+[37m      319 │ ...       @if (account.accountType === cashAccountType.[32mMobileBank[37m) {
+          ╵                                                        [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component CashAccount.
+
+    src/app/pages/cashManagement/cash-account/cash-account.ts:26:15:
+[37m      26 │   templateUrl: [32m'./cash-account.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

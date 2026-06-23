@@ -1,0 +1,12 @@
+
+> forntend@0.0.0 start
+> ng serve --port 4240 --proxy-config proxy.conf.json --host 127.0.0.1 --port 4300
+
+---------------------------------
+- Root directory:  D:\Project\SM trading\SMTrading\SMTreading\frontend
+- Working directory:  D:\Project\SM trading\SMTrading\SMTreading\frontend
+- Files: .env
+- Environment: development
+- Environment files: none
+---------------------------------
+

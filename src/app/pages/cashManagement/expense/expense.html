@@ -88,7 +88,7 @@
                                 </div>
                                 <input type="text" class="form-control border-left-0"
                                     placeholder="Category, account, date, amount, or note..."
-                                    [(ngModel)]="search" (keyup.enter)="onSearch()">
+                                    [(ngModel)]="search">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-info" (click)="onSearch()">
                                         <i class="fas fa-search mr-1"></i> Search
@@ -143,10 +143,9 @@
 
                             @if (!loading && pagedExpenses.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 190px;">Date</th>
                                             <th style="min-width: 220px;">Category</th>
                                             <th style="min-width: 200px;">Cash Account</th>
@@ -158,37 +157,34 @@
                                     <tbody>
                                         @for (item of pagedExpenses; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Date">
                                                 <span class="badge badge-light border px-3 py-2">
                                                     <i class="fas fa-calendar-alt mr-1 text-info"></i>
                                                     {{ formatDate(item.expenseDate) }}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td data-label="Category">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-receipt fa-lg"></i>
                                                     </div>
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ getCategoryName(item) }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{ item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Cash Account">
                                                 <span class="font-weight-bold d-block text-sm">
                                                     {{ getCashAccountName(item) }}
                                                 </span>
-                                                <span class="text-muted text-xs">Account ID: {{ item.cashAccountId }}</span>
                                             </td>
-                                            <td class="text-right font-weight-bold text-danger">
+                                            <td class="text-right font-weight-bold text-danger" data-label="Amount">
                                                 {{ formatNumber(item.amount) }}
                                             </td>
-                                            <td>
+                                            <td data-label="Note">
                                                 <span class="text-muted">{{ item.note || '-' }}</span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Expense">
@@ -259,7 +255,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title font-weight-light">
+                    <h5 class="modal-title font-weight-bold">
                         <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
                         <span class="ml-2">{{ isEditMode ? 'Edit Expense' : 'Add Expense' }}</span>
                     </h5>
@@ -371,7 +367,7 @@
 
                 <div class="modal-footer bg-white border-0 justify-content-between">
                     <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
-                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveExpense()"
+                    <button type="button" class="btn btn-info px-4 shadow-sm" (click)="saveExpense()"
                         [disabled]="expenseForm.invalid || isAmountOverCurrentBalance">
                         <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Expense' : 'Save Expense' }}
                     </button>

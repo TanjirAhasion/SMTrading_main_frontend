@@ -47,7 +47,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 col-sm-12 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Contract Number</label>
@@ -58,43 +58,37 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0" placeholder="Search rental..."
-                                    [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="applyFilters()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                </div>
+                                    [(ngModel)]="searchQuery">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Start Date</label>
                             <input type="date" class="form-control border shadow-sm"
-                                [(ngModel)]="selectedStartDate" (change)="applyFilters()">
+                                [(ngModel)]="selectedStartDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">End Date</label>
                             <input type="date" class="form-control border shadow-sm"
-                                [(ngModel)]="selectedEndDate" (change)="applyFilters()">
+                                [(ngModel)]="selectedEndDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Customer</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId">
                                 <option [value]="''">All Customers</option>
                                 @for (c of customers; track c.id) {
                                 <option [value]="c.id">{{ c.name }}</option>
@@ -104,35 +98,39 @@
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Status</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatus"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatus">
                                 <option [value]="''">All Statuses</option>
-                                <option [value]="'Active'">Active</option>
-                                <option [value]="'Closed'">Closed</option>
-                                <option [value]="'Pending'">Pending</option>
+                                @for (status of rentalStatusOptions; track status.value) {
+                                <option [value]="status.value">{{ status.label }}</option>
+                                }
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-1 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
-                            <label class="small text-muted mb-1">Reset</label>
-                            <button type="button" class="btn btn-default btn-block border shadow-sm"
-                                (click)="clearFilters()"
-                                [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
-                                <i class="fas fa-undo"></i>
-                            </button>
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border"
+                                    (click)="clearFilters()"
+                                    [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Reports</label>
@@ -172,10 +170,9 @@
 
                             @if (!loading && rentals.length > 0) {
                             <div class="table-responsive" id="rentalPrintSection">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 60px;">#</th>
                                             <th style="min-width: 170px;">Contract Number</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
@@ -188,35 +185,29 @@
                                     <tbody>
                                         @for (item of rentals; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}</td>
-                                            <td>
+                                            <td data-label="Contract Number">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-file-contract fa-lg"></i>
                                                     </div>
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ getContractNumber(item) }}</span>
-                                                        <small class="text-muted">ID: {{ item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ item.startDate | date: 'mediumDate' }}</td>
-                                            <td>{{ item.endDate | date: 'mediumDate' }}</td>
-                                            <td><span class="font-weight-bold">{{ getCustomerName(item) }}</span></td>
-                                            <td class="text-center">
-                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
-                                                    'badge-success': getStatus(item) === 'Active',
-                                                    'badge-warning text-white': getStatus(item) === 'Pending',
-                                                    'badge-secondary': getStatus(item) === 'Closed'
-                                                }">
+                                            <td data-label="Start Date">{{ item.startDate | date: 'mediumDate' }}</td>
+                                            <td data-label="End Date">{{ item.endDate | date: 'mediumDate' }}</td>
+                                            <td data-label="Customer Name"><span class="font-weight-bold">{{ getCustomerName(item) }}</span></td>
+                                            <td class="text-center" data-label="Status">
+                                                <span class="badge px-3 py-2 rounded-pill" [ngClass]="getStatusBadgeClass(item)">
                                                     <i class="fas fa-circle mr-1 small"></i>
                                                     {{ getStatus(item) }}
                                                 </span>
                                             </td>
-                                            <td class="text-right font-weight-bold text-primary">
+                                            <td class="text-right font-weight-bold text-primary" data-label="Total Rent">
                                                 {{ getRentalAmount(item) | currency }}
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" title="View Rental"
                                                         (click)="viewRental(item)">
@@ -225,6 +216,19 @@
                                                     <button class="btn btn-white btn-sm border" title="Edit Rental"
                                                         (click)="editRental(item)">
                                                         <i class="fas fa-pencil-alt text-info"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border"
+                                                        title="Generate Next Bill"
+                                                        [disabled]="!canGenerateNextBill(item) || isGeneratingBill(item)"
+                                                        (click)="generateNextBill(item, $event)">
+                                                        <i class="fas fa-file-invoice-dollar"
+                                                            [class.text-success]="canGenerateNextBill(item)"
+                                                            [class.text-muted]="!canGenerateNextBill(item)"></i>
+                                                        <span *ngIf="isGeneratingBill(item)"
+                                                            class="spinner-border spinner-border-sm ml-1"
+                                                            role="status">
+                                                            <span class="sr-only">Loading...</span>
+                                                        </span>
                                                     </button>
                                                 </div>
                                             </td>
@@ -307,11 +311,7 @@
                         <p class="mb-0"><strong>End:</strong> {{ selectedRental.endDate | date:'dd/MM/yyyy' }}</p>
                         <p class="mb-0">
                             <strong>Status:</strong>
-                            <span class="badge" [ngClass]="{
-                                'badge-success': getStatus() === 'Active',
-                                'badge-warning text-white': getStatus() === 'Pending',
-                                'badge-secondary': getStatus() === 'Closed'
-                            }">
+                            <span class="badge" [ngClass]="getStatusBadgeClass()">
                                 {{ getStatus() }}
                             </span>
                         </p>
@@ -324,7 +324,6 @@
                         <h6 class="mb-0">{{ selectedRental.companyName || getCustomerName() }}</h6>
                         <p class="text-muted small mb-0">
                             {{ getCustomerContactName() }}<br>
-                            Customer ID: {{ selectedRental.customerId }}
                         </p>
                     </div>
                     <div class="col-sm-6 text-right">
@@ -335,10 +334,9 @@
                     </div>
                 </div>
 
-                <table class="table table-sm table-striped border">
+                <table class="table table-sm table-striped border mobile-card-table">
                     <thead class="bg-light">
                         <tr>
-                            <th>#</th>
                             <th>Machine</th>
                             <th class="text-center">Qty</th>
                             <th>Serials</th>
@@ -349,24 +347,23 @@
                     <tbody>
                         @if (getSelectedRentalItems().length > 0) {
                         <tr *ngFor="let item of getSelectedRentalItems(); let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ getRentalItemName(item) }}</td>
-                            <td class="text-center">{{ item.quantity }}</td>
-                            <td>{{ getRentalItemSerials(item) || '-' }}</td>
-                            <td class="text-right">{{ item.unitRent | number:'1.2-2' }}</td>
-                            <td class="text-right font-weight-bold">{{ getRentalItemTotal(item) | number:'1.2-2' }}</td>
+                            <td data-label="Machine">{{ getRentalItemName(item) }}</td>
+                            <td class="text-center" data-label="Qty">{{ item.quantity }}</td>
+                            <td data-label="Serials">{{ getRentalItemSerials(item) || '-' }}</td>
+                            <td class="text-right" data-label="Rent">{{ item.unitRent | number:'1.2-2' }}</td>
+                            <td class="text-right font-weight-bold" data-label="Total">{{ getRentalItemTotal(item) | number:'1.2-2' }}</td>
                         </tr>
                         } @else {
                         <tr>
-                            <td>1</td>
-                            <td>
+                            <td data-label="#">1</td>
+                            <td data-label="Machine">
                                 {{ getContractNumber() }}
                                 <small class="text-muted d-block">Item details are not available from the list response.</small>
                             </td>
-                            <td class="text-center">-</td>
-                            <td>-</td>
-                            <td class="text-right">-</td>
-                            <td class="text-right font-weight-bold">{{ getRentalAmount() | number:'1.2-2' }}</td>
+                            <td class="text-center" data-label="Qty">-</td>
+                            <td data-label="Serials">-</td>
+                            <td class="text-right" data-label="Rent">-</td>
+                            <td class="text-right font-weight-bold" data-label="Total">{{ getRentalAmount() | number:'1.2-2' }}</td>
                         </tr>
                         }
                     </tbody>
@@ -404,6 +401,17 @@
                     Close
                 </button>
                 <div>
+                    <button type="button" class="btn btn-success px-4 mr-2"
+                        [disabled]="!canGenerateNextBill() || isGeneratingBill()"
+                        (click)="generateNextBill(selectedRental, $event)">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>
+                        Generate Next Bill
+                        <span *ngIf="isGeneratingBill()"
+                            class="spinner-border spinner-border-sm ml-1"
+                            role="status">
+                            <span class="sr-only">Loading...</span>
+                        </span>
+                    </button>
                     <button type="button" class="btn btn-outline-info px-4 mr-2" (click)="printRentalContract()">
                         <i class="fas fa-print mr-1"></i> Print
                     </button>

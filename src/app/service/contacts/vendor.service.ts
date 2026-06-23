@@ -15,6 +15,33 @@ export interface Vendor {
     companyName: string;
     businessCardPath: string;
     isActive: boolean;
+    dueAmount: number;
+}
+
+export interface VendorPaymentHistory {
+    id: number;
+    vendorId: number;
+    vendorName: string;
+    companyName?: string;
+    purchaseId?: number;
+    amount: number;
+    transactionDate: string | Date;
+    sourceType: number;
+    sourceTypeName: string;
+    debit: number;
+    credit: number;
+    balance: number;
+    description?: string;
+}
+
+export interface VendorDuePaymentRequest {
+    vendorId: number;
+    amount: number;
+    cashAccountId?: number | null;
+    paymentDate?: string | Date;
+    paymentMethod: number;
+    actionType: number;
+    note?: string;
 }
 
 @Injectable({
@@ -45,5 +72,14 @@ export class VendorService {
 
     delete(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    }
+
+    getPaymentHistory(vendorId?: number): Observable<VendorPaymentHistory[]> {
+        const url = `${environment.apiUrl}/vendor-payments/history`;
+        return this.http.get<VendorPaymentHistory[]>(vendorId ? `${url}?vendorId=${vendorId}` : url);
+    }
+
+    payDue(data: VendorDuePaymentRequest): Observable<number> {
+        return this.http.post<number>(`${environment.apiUrl}/vendor-payments/pay-due`, data);
     }
 }

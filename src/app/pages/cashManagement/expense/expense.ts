@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -8,8 +8,7 @@ import { ExpenseCategoryDto, ExpenseCategoryService } from '../../../service/cas
 import { ExcelService } from '../../../service/common/excel.service';
 import { PdfService } from '../../../service/common/pdf.service';
 import { PrintService } from '../../../service/common/print.service';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 @Component({
   selector: 'app-expense',
@@ -18,7 +17,7 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   templateUrl: './expense.html',
   styleUrl: './expense.css',
 })
-export class Expense implements OnInit {
+export class Expense implements OnInit, OnDestroy {
   expenses: ExpenseDto[] = [];
   categories: ExpenseCategoryDto[] = [];
   cashAccounts: CashAccountDto[] = [];
@@ -30,14 +29,8 @@ export class Expense implements OnInit {
   search = '';
   page = 1;
   pageSize = 10;
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  toast: ToastState = createEmptyToast();
+  private readonly toastController = new ToastController();
 
   constructor(
     private expenseService: ExpenseService,
@@ -51,6 +44,10 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.loadPageData();
+  }
+
+  ngOnDestroy(): void {
+    this.toastController.destroy();
   }
 
   get filteredExpenses(): ExpenseDto[] {
@@ -369,29 +366,10 @@ export class Expense implements OnInit {
   }
 
   showToast(type: ToastType, title: string, message: string): void {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = { show: true, type, title, message, icon: icons[type] };
-
-    this.toastTimer = setTimeout(() => {
-      this.closeToast();
-    }, 3500);
+    this.toastController.show(type, title, message, (toast) => this.toast = toast, () => this.closeToast());
   }
 
   closeToast(): void {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+    this.toastController.close((toast) => this.toast = toast);
   }
 }

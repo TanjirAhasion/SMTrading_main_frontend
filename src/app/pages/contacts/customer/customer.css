@@ -10,3 +10,89 @@
     font-size: 0.9rem;
     color: #555;
 }
+
+.customer-modal-header {
+    border-bottom: 0;
+}
+
+.customer-modal .modal-body {
+    max-height: 72vh;
+    overflow-y: auto;
+}
+
+.customer-payment-panel .form-control {
+    min-height: 42px;
+}
+
+.customer-due-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.35rem;
+    background: #f8fafc;
+}
+
+.customer-summary-info {
+    min-width: 0;
+}
+
+.customer-summary-info h6 {
+    color: #343a40;
+}
+
+.customer-summary-due {
+    flex: 0 0 auto;
+}
+
+.customer-due-summary-wide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, auto) minmax(160px, auto);
+}
+
+.customer-summary-balance {
+    text-align: center;
+    padding: 0 1.25rem;
+    border-left: 1px solid #e0edf0;
+    border-right: 1px solid #e0edf0;
+}
+
+.customer-balance-amount {
+    display: block;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #138496;
+}
+
+.customer-due-amount {
+    display: block;
+    font-size: 1.65rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #dc3545;
+}
+
+@media (max-width: 575.98px) {
+    .customer-due-summary,
+    .customer-due-summary-wide {
+        display: block;
+    }
+
+    .customer-summary-balance {
+        text-align: left;
+        padding: 0.85rem 0;
+        margin: 0.85rem 0;
+        border-left: 0;
+        border-right: 0;
+        border-top: 1px solid #e0edf0;
+        border-bottom: 1px solid #e0edf0;
+    }
+
+    .customer-summary-due {
+        text-align: left !important;
+        margin-top: 0.75rem;
+    }
+}

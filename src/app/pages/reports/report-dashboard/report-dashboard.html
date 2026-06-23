@@ -1,0 +1,81 @@
+<div class="content-wrapper">
+    <div class="content-header pb-1">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-sm-7">
+                    <h1 class="m-0 font-weight-bold">
+                        <i class="fas fa-chart-line mr-2 text-info"></i>Serial Reports
+                    </h1>
+                    <p class="text-muted mb-0 mt-1">Track serial stock, rentals, sales, and service movement.</p>
+                </div>
+                <div class="col-sm-5 text-sm-right mt-3 mt-sm-0">
+                    <a routerLink="/reports/serial-status" class="btn btn-info shadow-sm">
+                        <i class="fas fa-list-alt mr-1"></i> View Status Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                @for (card of [
+                    { label: 'Available', value: status?.availableCount || 0, icon: 'fa-check-circle', tone: 'success', link: '/reports/serial-status' },
+                    { label: 'Rented', value: status?.rentedCount || 0, icon: 'fa-hand-holding-usd', tone: 'info', link: '/reports/rental-active' },
+                    { label: 'Sold', value: status?.soldCount || 0, icon: 'fa-file-invoice-dollar', tone: 'secondary', link: '/reports/sales' },
+                    { label: 'Repair', value: status?.repairCount || 0, icon: 'fa-tools', tone: 'warning', link: '/reports/maintenance' },
+                    { label: 'Lost', value: status?.lostCount || 0, icon: 'fa-exclamation-triangle', tone: 'danger', link: '/reports/maintenance' }
+                ]; track card.label) {
+                <div class="col-xl col-lg-4 col-md-4 col-sm-6 col-12">
+                    <a [routerLink]="card.link" class="report-metric report-metric-{{ card.tone }}">
+                        <span class="report-metric-icon">
+                            <i class="fas" [ngClass]="card.icon"></i>
+                        </span>
+                        <span class="report-metric-body">
+                            <span class="report-metric-label">{{ card.label }}</span>
+                            @if (loading) {
+                            <span class="report-metric-value placeholder-value"></span>
+                            } @else {
+                            <span class="report-metric-value">{{ card.value }}</span>
+                            }
+                        </span>
+                    </a>
+                </div>
+                }
+            </div>
+
+            <div class="report-section">
+                <div class="section-heading">
+                    <div>
+                        <h2 class="h5 font-weight-bold mb-1">Report Center</h2>
+                        <p class="text-muted mb-0">Open a focused report, apply filters, then export PDF or Excel.</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    @for (link of [
+                        { label: 'Serial Status', url: '/reports/serial-status', icon: 'fa-list-alt', text: 'Current serial counts by status, brand, product, and customer.' },
+                        { label: 'Serial History', url: '/reports/serial-history', icon: 'fa-stream', text: 'Lookup one serial and review its full movement timeline.' },
+                        { label: 'Product Summary', url: '/reports/product-summary', icon: 'fa-boxes', text: 'Machine-level stock, rental, sale, and service totals.' },
+                        { label: 'Rental Active', url: '/reports/rental-active', icon: 'fa-clock', text: 'Active rental serials with customer and due-date filters.' },
+                        { label: 'Rental History', url: '/reports/rental-history', icon: 'fa-history', text: 'Completed and historical rental movement records.' },
+                        { label: 'Sales Report', url: '/reports/sales', icon: 'fa-shopping-cart', text: 'Sold serials with sale dates and customer details.' },
+                        { label: 'Maintenance', url: '/reports/maintenance', icon: 'fa-tools', text: 'Repair, damage, lost, and service-related serial records.' }
+                    ]; track link.url) {
+                    <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                        <a [routerLink]="link.url" class="report-link-card">
+                            <span class="report-link-icon"><i class="fas" [ngClass]="link.icon"></i></span>
+                            <span class="report-link-content">
+                                <span class="report-link-title">{{ link.label }}</span>
+                                <span class="report-link-text">{{ link.text }}</span>
+                            </span>
+                            <i class="fas fa-chevron-right report-link-arrow"></i>
+                        </a>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

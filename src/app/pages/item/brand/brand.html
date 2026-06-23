@@ -68,7 +68,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-8 col-sm-12 mb-2">
+                <div class="col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Brands</label>
@@ -79,23 +79,43 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Name or description..." [(ngModel)]="search"
-                                    (keyup.enter)="onSearch()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="onSearch()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
-                                        [disabled]="!search">
-                                        <i class="fas fa-undo mr-1"></i> Reset
-                                    </button>
-                                </div>
+                                    placeholder="Name or description..." [(ngModel)]="search">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-12 mb-2">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Status</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedActiveStatus">
+                                <option [value]="''">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="onSearch()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                    [disabled]="!search && !selectedActiveStatus && !appliedActiveStatus" title="Reset filters">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Reports</label>
@@ -103,7 +123,7 @@
                                 <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                     [disabled]="filteredBrands.length === 0">
-                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                    <i class="fas fa-file-export mr-1"></i> Export Report
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
                                     <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
@@ -135,12 +155,10 @@
 
                             @if (!loading && pagedBrands.length > 0) {
                             <div class="table-responsive">
-                                <table id="brandLoadDataTables" class="table table-hover table-valign-middle mb-0">
+                                <table id="brandLoadDataTables" class="table table-hover table-valign-middle mobile-card-table mb-0">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 220px;">Brand Identity</th>
-                                            <th>Description</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center pr-3">Actions</th>
                                         </tr>
@@ -148,8 +166,7 @@
                                     <tbody>
                                         @for (item of pagedBrands; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Brand Identity">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-tag fa-lg"></i>
@@ -157,15 +174,10 @@
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ item.name
                                                             }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{
-                                                            item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <span class="text-muted text-sm">{{ item.description || '-' }}</span>
-                                            </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isActive,
                                                     'badge-secondary': !item.isActive
@@ -174,8 +186,12 @@
                                                     {{ item.isActive ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
+                                                    <button type="button" class="btn btn-white btn-sm border"
+                                                        title="View Details" (click)="showBrandDetail(item)">
+                                                        <i class="fas fa-info-circle text-info"></i>
+                                                    </button>
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Brand">
                                                         <i class="fas fa-pencil-alt text-info"></i>
@@ -211,7 +227,7 @@
 
                                 <div class="d-flex align-items-center mt-2 mt-sm-0">
                                     <select class="form-control form-control-sm mr-2" style="width: 80px;"
-                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
                                         <option [ngValue]="5">5</option>
                                         <option [ngValue]="10">10</option>
                                         <option [ngValue]="25">25</option>
@@ -239,6 +255,47 @@
             </div>
         </div>
     </section>
+
+    @if (selectedBrandDetail) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas fa-info-circle mr-2"></i>Brand Details
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeBrandDetail()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Name</dt>
+                                <dd class="col-sm-8 font-weight-bold">{{ selectedBrandDetail.name }}</dd>
+                                <dt class="col-sm-4">Description</dt>
+                                <dd class="col-sm-8">{{ selectedBrandDetail.description || '-' }}</dd>
+                                <dt class="col-sm-4">Logo</dt>
+                                <dd class="col-sm-8">{{ selectedBrandDetail.logoUrl || '-' }}</dd>
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge" [ngClass]="selectedBrandDetail.isActive ? 'badge-success' : 'badge-secondary'">
+                                        {{ selectedBrandDetail.isActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closeBrandDetail()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
 
     @if (showForm) {
     <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">

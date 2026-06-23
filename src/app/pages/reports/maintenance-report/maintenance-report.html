@@ -1,0 +1,14 @@
+<div class="content-wrapper">
+    <div class="content-header"><div class="container-fluid"><h1 class="m-0 font-weight-bold"><i class="fas fa-tools mr-2 text-info"></i>Maintenance Report</h1></div></div>
+    <section class="content"><div class="container-fluid">
+        <div class="card shadow-sm border-0 mb-3"><div class="card-body py-3"><form [formGroup]="filterForm" class="row align-items-end">
+            <div class="col-md-3 mb-2"><label>Brand</label><select class="form-control" formControlName="brandId"><option value="">All</option>@for (b of brands; track b.id) {<option [value]="b.id">{{ b.name }}</option>}</select></div>
+            <div class="col-md-3 mb-2"><label>Product</label><select class="form-control" formControlName="productId"><option value="">All</option>@for (p of filteredProducts; track p.id) {<option [value]="p.id">{{ p.name }} - {{ p.model }}</option>}</select></div>
+            <div class="col-md-2 mb-2"><label>From</label><input type="date" class="form-control" formControlName="fromDate"></div>
+            <div class="col-md-2 mb-2"><label>To</label><input type="date" class="form-control" formControlName="toDate"></div>
+            <div class="col-md-2 mb-2 text-right"><button type="button" class="btn btn-info mr-2" (click)="page=1; loadReport()">Search</button><button type="button" class="btn btn-default border" (click)="reset()">Reset</button></div>
+            <div class="col-12 mb-2 text-right"><button type="button" class="btn btn-success mr-2" (click)="export('excel')">Excel</button><button type="button" class="btn btn-danger" (click)="export('pdf')">PDF</button></div>
+        </form></div></div>
+        <div class="card card-outline card-info shadow-sm"><app-report-table [columns]="columns" [rows]="rows" [loading]="loading" [page]="page" [pageSize]="pageSize" [totalCount]="totalCount" [sortBy]="sortBy" [sortDirection]="sortDirection" (pageChange)="pageChange($event)" (sortChange)="sortChange($event)"></app-report-table></div>
+    </div></section>
+</div>

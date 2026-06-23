@@ -137,7 +137,7 @@
             </div>
             <div class="card-body p-0">
               <div class="table-responsive">
-                <table class="table table-striped mb-0">
+                <table class="table table-striped mb-0 mobile-card-table">
                   <thead>
                     <tr>
                       <th>Product</th>
@@ -158,7 +158,7 @@
                     @for (item of request.items; track $index; let i = $index) {
                     <tr>
                       <!-- PRODUCT -->
-                      <td>
+                      <td data-label="Product">
                         <strong class="d-block">
                           {{ item.productName }}
                         </strong>
@@ -170,22 +170,22 @@
                         </span>
                       </td>
                       <!-- QTY -->
-                      <td class="text-center">
+                      <td class="text-center" data-label="Qty">
                         {{ item.quantity }}
                       </td>
                       <!-- SERIAL -->
-                      <td>
+                      <td data-label="Serials">
                         <div *ngFor="let serial of item.serialNumbers"
                           class="badge badge-light border mr-1 mb-1 p-2 serial-badge">
                           {{ serial }}
                         </div>
                       </td>
                       <!-- RENT -->
-                      <td>
+                      <td data-label="Rent">
                         <input type="number" class="form-control form-control-sm text-right" [(ngModel)]="item.rent">
                       </td>
                       <!-- DELETE -->
-                      <td class="text-center text-danger">
+                      <td class="text-center text-danger" data-label="Actions">
                         <i class="fas fa-trash cursor-pointer" (click)="removeItem(i)">
                         </i>
                       </td>
@@ -207,7 +207,8 @@
         @if (request.customerId > 0) {
         <div class="col-md-3 animate__animated animate__fadeInRight">
 
-          <div class="info-box mb-3 bg-warning shadow-sm" *ngIf="customerDueAmount > 0">
+          <div class="info-box mb-3 shadow-sm" *ngIf="selectedCustomer"
+            [ngClass]="customerDueAmount > 0 ? 'bg-warning' : 'bg-success'">
             <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Previous Due Balance</span>
@@ -226,6 +227,16 @@
               <div class="d-flex justify-content-between align-items-center bg-light p-1 rounded">
                 <span class="h5 mb-0">Total Rent:</span>
                 <span class="h4 mb-0 text-primary font-weight-bold">{{ totalRent | number:'1.2-2' }}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="small text-muted">Previous Due:</span>
+                <span class="font-weight-bold">{{ customerDueAmount | number:'1.2-2' }}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Total Due With Current Rent:</span>
+                <span class="font-weight-bold text-danger">{{ totalDueWithCurrentRent | number:'1.2-2' }}</span>
               </div>
 
               <!-- BILLING -->
@@ -334,12 +345,12 @@
           <label>
             Search Serial
           </label>
-          <input type="text" class="form-control" placeholder="Type minimum 2 characters..." [(ngModel)]="serialSearch"
+          <input type="text" class="form-control" placeholder="Type 3 or more characters..." [(ngModel)]="serialSearch"
             (ngModelChange)="onSearchChange($event)">
         </div>
         <!-- SEARCH RESULT -->
-        <div *ngIf="serials.length > 0" class="border rounded p-2 mb-3" style="max-height:250px; overflow-y:auto;">
-          <div *ngFor="let s of serials" class="border-bottom p-2 cursor-pointer" (click)="addSerial(s)">
+        <div *ngIf="availableSerials.length > 0" class="border rounded p-2 mb-3" style="max-height:250px; overflow-y:auto;">
+          <div *ngFor="let s of availableSerials" class="border-bottom p-2 cursor-pointer" (click)="addSerial(s)">
             <strong>
               {{ s.serialNumber }}
             </strong>
@@ -347,17 +358,16 @@
             <small class="text-muted">
               {{ s.productName }}
               |
-              {{ s.brand }}
+              {{ s.brandName || s.brand }}
               |
               {{ s.model }}
             </small>
           </div>
         </div>
         <!-- SELECTED -->
-        <table class="table table-sm table-bordered">
+        <table class="table table-sm table-bordered mobile-card-table">
           <thead class="bg-light">
             <tr>
-              <th>#</th>
               <th>Serial</th>
               <th>Product</th>
               <th width="40">
@@ -366,16 +376,13 @@
           </thead>
           <tbody>
             <tr *ngFor="let s of selectedSerials; let i = index">
-              <td>
-                {{ i + 1 }}
-              </td>
-              <td>
+              <td data-label="Serial">
                 {{ s.serialNumber }}
               </td>
-              <td>
+              <td data-label="Product">
                 {{ s.productName }}
               </td>
-              <td class="text-danger text-center">
+              <td class="text-danger text-center" data-label="Actions">
                 <i class="fas fa-trash cursor-pointer" (click)="removeSerial(s)">
                 </i>
               </td>
@@ -474,10 +481,9 @@
           </div>
         </div>
         <!-- TABLE -->
-        <table class="table table-sm table-striped border">
+        <table class="table table-sm table-striped border mobile-card-table">
           <thead class="bg-light">
             <tr>
-              <th>#</th>
               <th>Machine</th>
               <th class="text-center">
                 Qty
@@ -495,10 +501,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let item of request.items; let i = index">
-              <td>
-                {{ i + 1 }}
-              </td>
-              <td>
+              <td data-label="Machine">
                 <strong>
                   {{ item.productName }}
                 </strong>
@@ -509,19 +512,19 @@
                   {{ item.model }}
                 </small>
               </td>
-              <td class="text-center">
+              <td class="text-center" data-label="Qty">
                 {{ item.quantity }}
               </td>
-              <td>
+              <td data-label="Serials">
                 <div *ngFor="let serial of item.serialNumbers"
                   class="badge badge-light border mr-1 mb-1 p-2 serial-badge">
                   {{ serial }}
                 </div>
               </td>
-              <td class="text-right">
+              <td class="text-right" data-label="Rent">
                 {{ item.rent | number:'1.2-2' }}
               </td>
-              <td class="text-right font-weight-bold">
+              <td class="text-right font-weight-bold" data-label="Total">
                 {{
                 (item.quantity * item.rent)
                 |
@@ -562,6 +565,30 @@
                 <td class="text-right h5 text-primary font-weight-bold">
                   {{
                   totalRent
+                  |
+                  number:'1.2-2'
+                  }}
+                </td>
+              </tr>
+              <tr>
+                <th class="text-muted">
+                  Previous Due:
+                </th>
+                <td class="text-right text-warning font-weight-bold">
+                  {{
+                  customerDueAmount
+                  |
+                  number:'1.2-2'
+                  }}
+                </td>
+              </tr>
+              <tr class="bg-light">
+                <th>
+                  Total Due With Current Rent:
+                </th>
+                <td class="text-right text-danger font-weight-bold">
+                  {{
+                  totalDueWithCurrentRent
                   |
                   number:'1.2-2'
                   }}

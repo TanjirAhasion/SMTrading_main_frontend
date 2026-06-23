@@ -1,0 +1,39 @@
+.transfer-balance-box {
+  align-items: center;
+  background: #f8fbfc;
+  border: 1px solid #d6edf3;
+  border-left: 4px solid #17a2b8;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 10px 12px;
+}
+
+.transfer-balance-box strong {
+  color: #343a40;
+  display: block;
+  font-size: 14px;
+}
+
+.transfer-balance-box.is-empty {
+  background: #f8f9fa;
+  border-color: #e5e7eb;
+  border-left-color: #adb5bd;
+}
+
+.transfer-balance-label {
+  color: #6c757d;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.transfer-balance-amount {
+  color: #117a8b;
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}

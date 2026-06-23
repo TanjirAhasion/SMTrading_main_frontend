@@ -42,6 +42,15 @@ export class Sidebar implements OnDestroy {
     return this.openMenu === menu;
   }
 
+  closeMobileSidebar(): void {
+    if (typeof window === 'undefined' || window.innerWidth > 991.98) {
+      return;
+    }
+
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.add('sidebar-collapse');
+  }
+
   private setOpenMenuFromUrl(url: string): void {
     if (url.startsWith('/item')) {
       this.openMenu = 'master-data';
@@ -60,6 +69,11 @@ export class Sidebar implements OnDestroy {
 
     if (url.startsWith('/cash-management')) {
       this.openMenu = 'cash-management';
+      return;
+    }
+
+    if (url.startsWith('/reports')) {
+      this.openMenu = 'reports';
       return;
     }
 

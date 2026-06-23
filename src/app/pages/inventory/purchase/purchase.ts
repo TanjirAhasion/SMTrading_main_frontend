@@ -4,7 +4,7 @@ import { Vendor, VendorService } from '../../../service/contacts/vendor.service'
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../service/item/product.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CashAccountDto, CashAccountService } from '../../../service/cash-management/cash-account.service';
 
 @Component({
@@ -19,6 +19,7 @@ export class PurchaseComponent implements OnInit {
   private productService = inject(ProductService);
   private cashAccountService = inject(CashAccountService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   vendors: Vendor[] = [];
@@ -38,6 +39,7 @@ export class PurchaseComponent implements OnInit {
     discount: 0,
     totalAmount: 0,
     paidAmount: 0,
+    purchaseDate: new Date().toISOString().split('T')[0],
     cashAccountId: 0,
     paymentMethod: '',
     items: []
@@ -66,6 +68,20 @@ export class PurchaseComponent implements OnInit {
     if (!this.request.cashAccountId || !this.request.paidAmount) return false;
 
     return Number(this.request.paidAmount) > this.selectedCashAccountBalance;
+  }
+
+  get totalDuePayable(): number {
+    return Math.max(0, Number(this.vendorDueAmount) + Number(this.request.totalAmount));
+  }
+
+  get remainingVendorDue(): number {
+    return this.totalDuePayable - (Number(this.request.paidAmount) || 0);
+  }
+
+  get isPaidAmountOverVendorDue(): boolean {
+    if (!this.request.paidAmount) return false;
+
+    return Number(this.request.paidAmount) > this.totalDuePayable;
   }
 
   onCashAccountChange() {
@@ -123,11 +139,19 @@ export class PurchaseComponent implements OnInit {
 
   onVendorChange() {
     this.selectedVendor = this.vendors.find(v => v.id == this.request.vendorId) || null;
+    this.vendorDueAmount = Number(this.selectedVendor?.dueAmount) || 0;
 
     if (this.selectedVendor) {
-      // Logic to fetch due amount from backend would go here
-      // Example: this.vendorService.getBalance(this.selectedVendor.id).subscribe(...)
-      this.vendorDueAmount = 1500.50; // Dummy data
+      this.vendorService.getById(this.selectedVendor.id).subscribe({
+        next: (vendor) => {
+          this.selectedVendor = vendor;
+          this.vendorDueAmount = Number(vendor?.dueAmount) || 0;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error loading vendor balance', err);
+        }
+      });
     }
   }
 
@@ -145,6 +169,8 @@ export class PurchaseComponent implements OnInit {
       productId: 0,
       quantity: 1,
       unitCost: 0,
+      sellingCost: 0,
+      rentalCost: 0,
       discount: 0,
       productSerialNumber: []
     });
@@ -162,6 +188,15 @@ export class PurchaseComponent implements OnInit {
     if (duplicateIndex !== -1) {
       alert('This product is already added. Please update the quantity in the existing row.');
       this.request.items[index].productId = 0;
+      this.request.items[index].sellingCost = 0;
+      this.request.items[index].rentalCost = 0;
+      return;
+    }
+
+    const selectedProduct = this.products.find((product) => Number(product.id) === selectedProductId);
+    if (selectedProduct) {
+      this.request.items[index].sellingCost = Number(selectedProduct.defaultSalePrice) || 0;
+      this.request.items[index].rentalCost = Number(selectedProduct.defaultRentPrice) || 0;
     }
   }
 
@@ -192,6 +227,11 @@ export class PurchaseComponent implements OnInit {
       return;
     }
 
+    if (this.isPaidAmountOverVendorDue) {
+      alert(`Paid amount cannot be more than total due ${this.totalDuePayable.toFixed(2)}.`);
+      return;
+    }
+
     this.showConfirmation = true;
   }
 
@@ -213,14 +253,21 @@ export class PurchaseComponent implements OnInit {
       return;
     }
 
+    if (this.isPaidAmountOverVendorDue) {
+      this.showConfirmation = false;
+      alert(`Paid amount cannot be more than total due ${this.totalDuePayable.toFixed(2)}.`);
+      return;
+    }
+
     this.showConfirmation = false;
     this.onCashAccountChange();
+    this.request.purchaseDate = this.purchaseDate;
     //this.loading = true;
 
     this.purchaseService.createPurchase(this.request).subscribe({
       next: (id) => {
         alert(`Purchase Order #${id} created successfully!`);
-        this.resetForm();
+        this.router.navigate(['/inventory/purchaselist']);
       },
       error: (err) => {
         console.error(err);
@@ -237,6 +284,7 @@ export class PurchaseComponent implements OnInit {
       discount: 0,
       totalAmount: 0,
       paidAmount: 0,
+      purchaseDate: new Date().toISOString().split('T')[0],
       cashAccountId: 0,
       paymentMethod: '',
       items: []
@@ -263,7 +311,7 @@ export class PurchaseComponent implements OnInit {
       return false;
     }
 
-    if (this.isPaidAmountOverCurrentBalance) {
+    if (this.isPaidAmountOverCurrentBalance || this.isPaidAmountOverVendorDue) {
       return false;
     }
 
@@ -280,6 +328,8 @@ export class PurchaseComponent implements OnInit {
       Number(item.productId) > 0
       && Number(item.quantity) > 0
       && Number(item.unitCost) > 0
+      && Number(item.sellingCost) >= 0
+      && Number(item.rentalCost) >= 0
     );
   }
 }

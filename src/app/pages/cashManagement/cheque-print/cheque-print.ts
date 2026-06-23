@@ -1,12 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChequePrintService } from '../../../service/cash-management/cheque-print.service';
 import { ChequeData, ChequeFieldKey, ChequeTemplate } from './models/cheque-template.model';
 import { ChequeForm } from './components/cheque-form/cheque-form';
 import { ChequePreview } from './components/cheque-preview/cheque-preview';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 @Component({
   selector: 'app-cheque-print',
@@ -15,25 +14,22 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   templateUrl: './cheque-print.html',
   styleUrl: './cheque-print.scss'
 })
-export class ChequePrint {
+export class ChequePrint implements OnDestroy {
   templates: ChequeTemplate[] = [];
   selectedTemplate!: ChequeTemplate;
   selectedField: ChequeFieldKey = 'payeeName';
   cheque!: ChequeData;
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
-
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  toast: ToastState = createEmptyToast();
+  private readonly toastController = new ToastController();
 
   constructor(private chequePrintService: ChequePrintService) {
     this.templates = this.chequePrintService.getTemplates();
     this.selectedTemplate = this.cloneTemplate(this.templates[0]);
     this.cheque = this.getEmptyCheque();
+  }
+
+  ngOnDestroy(): void {
+    this.toastController.destroy();
   }
 
   get formattedDate(): string {
@@ -113,11 +109,7 @@ export class ChequePrint {
   }
 
   closeToast(): void {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+    this.toastController.close((toast) => this.toast = toast);
   }
 
   private isChequeValid(): boolean {
@@ -164,19 +156,7 @@ export class ChequePrint {
   }
 
   private showToast(type: ToastType, title: string, message: string): void {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = { show: true, type, title, message, icon: icons[type] };
-    this.toastTimer = setTimeout(() => this.closeToast(), 3500);
+    this.toastController.show(type, title, message, (toast) => this.toast = toast, () => this.closeToast());
   }
 
   private cloneTemplate(template: ChequeTemplate): ChequeTemplate {

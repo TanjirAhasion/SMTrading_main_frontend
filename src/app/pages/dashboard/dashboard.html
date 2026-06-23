@@ -125,7 +125,7 @@
                 </div>
               </div>
               <div class="table-responsive">
-                <table class="table table-hover dashboard-table cash-flow-table mb-0">
+                <table class="table table-hover dashboard-table cash-flow-table mb-0 mobile-card-table">
                   <thead>
                     <tr>
                       <th>Flow</th>
@@ -136,11 +136,11 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let flow of dailyCashFlow" [ngClass]="flow.type === 'balance' ? 'cash-flow-balance-row' : ''">
-                      <td>
+                      <td data-label="Flow">
                         <strong>{{ flow.label }}</strong>
                       </td>
-                      <td>{{ flow.details }}</td>
-                      <td class="text-center">
+                      <td data-label="Details">{{ flow.details }}</td>
+                      <td class="text-center" data-label="Type">
                         <span class="badge cash-flow-badge" [ngClass]="{
                           'badge-success': flow.type === 'in',
                           'badge-danger': flow.type === 'out',
@@ -149,7 +149,7 @@
                           {{ flow.type === 'in' ? 'Cash In' : flow.type === 'out' ? 'Cash Out' : 'Balance' }}
                         </span>
                       </td>
-                      <td class="text-right font-weight-bold" [ngClass]="getFlowAmountClass(flow)">
+                      <td class="text-right font-weight-bold" [ngClass]="getFlowAmountClass(flow)" data-label="Amount">
                         {{ getFlowSignedAmount(flow) }}
                       </td>
                     </tr>
@@ -177,7 +177,7 @@
             </div>
             <div class="card-body p-0">
               <div class="table-responsive">
-                <table class="table table-hover dashboard-table mb-0">
+                <table class="table table-hover dashboard-table mb-0 mobile-card-table">
                   <thead>
                     <tr>
                       <th>Machine</th>
@@ -189,16 +189,16 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let product of lowStockProducts.slice(0, 8)">
-                      <td>
+                      <td data-label="Machine">
                         <strong>{{ product.name }}</strong>
                         <small>{{ product.model || '-' }}</small>
                       </td>
-                      <td>{{ product.brandName || '-' }}</td>
-                      <td class="text-center">
+                      <td data-label="Brand">{{ product.brandName || '-' }}</td>
+                      <td class="text-center" data-label="Stock">
                         <span class="badge badge-danger">{{ product.inStock || 0 }}</span>
                       </td>
-                      <td class="text-center">{{ product.lowStockThreshold || 0 }}</td>
-                      <td>
+                      <td class="text-center" data-label="Low Limit">{{ product.lowStockThreshold || 0 }}</td>
+                      <td data-label="Level">
                         <div class="progress progress-xs">
                           <div class="progress-bar bg-warning" [style.width.%]="getStockPercent(product)"></div>
                         </div>
@@ -227,7 +227,7 @@
             </div>
             <div class="card-body p-0">
               <div class="table-responsive">
-                <table class="table table-hover dashboard-table mb-0">
+                <table class="table table-hover dashboard-table mb-0 mobile-card-table">
                   <thead>
                     <tr>
                       <th>Invoice</th>
@@ -238,13 +238,13 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let sale of latestSales">
-                      <td>
+                      <td data-label="Invoice">
                         <strong>{{ sale.invoiceNumber }}</strong>
                         <small>{{ getDateText(sale.saleDate) }}</small>
                       </td>
-                      <td>{{ getSaleCustomerName(sale) }}</td>
-                      <td class="text-right">{{ currency(getSaleTotal(sale)) }}</td>
-                      <td class="text-right">
+                      <td data-label="Customer">{{ getSaleCustomerName(sale) }}</td>
+                      <td class="text-right" data-label="Total">{{ currency(getSaleTotal(sale)) }}</td>
+                      <td class="text-right" data-label="Due">
                         <span [ngClass]="getSaleDue(sale) > 0 ? 'text-danger font-weight-bold' : 'text-success'">
                           {{ currency(getSaleDue(sale)) }}
                         </span>

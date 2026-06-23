@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
@@ -7,8 +7,7 @@ import { BrandService } from '../../../service/item/brand.service';
 import { PdfService } from '../../../service/common/pdf.service';
 import { ExcelService } from '../../../service/common/excel.service';
 import { PrintService } from '../../../service/common/print.service';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 @Component({
   selector: 'app-product',
@@ -18,17 +17,11 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   styleUrl: './product.css',
 })
 
-export class ProductComponent implements OnInit { // Renamed to ProductComponent to avoid conflict with interface
+export class ProductComponent implements OnInit, OnDestroy { // Renamed to ProductComponent to avoid conflict with interface
   page: number = 1;
   pageSize: number = 10;
   totalCount: number = 0;
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
+  toast: ToastState = createEmptyToast();
 
   products: Product[] = [];
   brands: any[] = [];
@@ -38,10 +31,16 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
   selectedId: number | null = null;
   search = '';
   selectedBrandId = '';
+  selectedActiveStatus = '';
+  appliedActiveStatus = '';
+  selectedProductDetail: Product | null = null;
+  showQuickBrandForm = false;
+  savingQuickBrand = false;
+  quickBrandName = '';
 
   // Initializing with correct types
   product: Partial<Product> = this.getEmptyProduct();
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly toastController = new ToastController();
 
   constructor(
     private productService: ProductService,
@@ -57,14 +56,18 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
     this.loadBrands(); 
   }
 
+  ngOnDestroy(): void {
+    this.toastController.destroy();
+  }
+
   loadBrands() {
-  this.brandService.getAll().subscribe({
-    next: (res) => {
-      this.brands = res;
-    },
-    error: (err) => console.error('Error loading brands', err)
-  });
-}
+    this.brandService.getAll().subscribe({
+      next: (res) => {
+        this.brands = res;
+      },
+      error: (err) => console.error('Error loading brands', err)
+    });
+  }
 
   getEmptyProduct(): Partial<Product> {
     return {
@@ -113,11 +116,18 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
 
   loadProducts() {
     this.loading = true;
-    this.productService.getWithStock(this.page, this.pageSize, this.search, this.selectedBrandId ? Number(this.selectedBrandId) : undefined).subscribe({
+    this.productService.getWithStock(
+      this.page,
+      this.pageSize,
+      this.search,
+      this.selectedBrandId ? Number(this.selectedBrandId) : undefined,
+      this.getSelectedIsActive(this.appliedActiveStatus)
+    ).subscribe({
       next: (res) => {
         // res already contains the brandName from our .NET DTO
         this.products = res.items;
         this.totalCount = res.totalCount;
+        this.selectedProductDetail = null;
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -129,6 +139,12 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
   }
 
   onSearch() {
+    this.appliedActiveStatus = this.selectedActiveStatus;
+    this.page = 1;
+    this.loadProducts();
+  }
+
+  onPageSizeChange() {
     this.page = 1;
     this.loadProducts();
   }
@@ -136,7 +152,10 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
   resetFilters() {
     this.search = '';
     this.selectedBrandId = '';
+    this.selectedActiveStatus = '';
+    this.appliedActiveStatus = '';
     this.page = 1;
+    this.selectedProductDetail = null;
     this.loadProducts();
   }
 
@@ -225,7 +244,7 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
       return;
     }
 
-    this.productService.getWithStock(1, this.totalCount, this.search, this.selectedBrandId ? Number(this.selectedBrandId) : undefined).subscribe({
+    this.productService.getWithStock(1, this.totalCount, this.search, this.selectedBrandId ? Number(this.selectedBrandId) : undefined, this.getSelectedIsActive(this.appliedActiveStatus)).subscribe({
       next: (res) => callback(res.items || []),
       error: (err) => {
         console.error('Report export failed:', err);
@@ -238,6 +257,12 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
     return (Number(value) || 0).toFixed(2);
   }
 
+  private getSelectedIsActive(value: string): boolean | undefined {
+    if (value === 'active') return true;
+    if (value === 'inactive') return false;
+    return undefined;
+  }
+
   openForm() {
     this.resetForm();
     this.showForm = true;
@@ -245,6 +270,7 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
 
   closeForm() {
     this.showForm = false;
+    this.closeQuickBrandForm();
   }
 
   edit(item: Product) {
@@ -253,6 +279,71 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
     // Spread operator is a cleaner way to copy values
     this.product = { ...item };
     this.showForm = true;
+  }
+
+  showProductDetail(item: Product) {
+    this.selectedProductDetail = item;
+  }
+
+  closeProductDetail() {
+    this.selectedProductDetail = null;
+  }
+
+  openQuickBrandForm() {
+    this.quickBrandName = '';
+    this.showQuickBrandForm = true;
+  }
+
+  closeQuickBrandForm() {
+    this.showQuickBrandForm = false;
+    this.savingQuickBrand = false;
+    this.quickBrandName = '';
+  }
+
+  saveQuickBrand() {
+    const name = this.quickBrandName.trim();
+
+    if (!name) {
+      this.showToast('warning', 'Validation Error', 'Brand name is required.');
+      return;
+    }
+
+    this.savingQuickBrand = true;
+    this.brandService.create({
+      name,
+      description: '',
+      logoUrl: '',
+      isActive: true
+    }).subscribe({
+      next: (id: any) => {
+        this.brandService.getAll().subscribe({
+          next: (brands) => {
+            this.brands = brands;
+            const newBrandId = Number(id);
+            const createdBrand = brands.find((brand: any) => Number(brand.id) === newBrandId)
+              || brands.find((brand: any) => brand.name?.trim().toLowerCase() === name.toLowerCase());
+
+            if (createdBrand) {
+              this.product.brandId = Number(createdBrand.id);
+            }
+
+            this.closeQuickBrandForm();
+            this.showToast('success', 'Success', 'Brand added successfully.');
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('Brand reload failed:', err);
+            this.savingQuickBrand = false;
+            this.showToast('danger', 'Save Failed', 'Brand added, but unable to refresh brand list.');
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Brand save failed:', err);
+        this.savingQuickBrand = false;
+        this.showToast('danger', 'Save Failed', this.getErrorMessage(err, 'Unable to add the brand. Please try again.'));
+      }
+    });
   }
 
  saveProduct() {
@@ -332,38 +423,26 @@ export class ProductComponent implements OnInit { // Renamed to ProductComponent
     this.isEditMode = false;
     this.selectedId = null;
     this.product = this.getEmptyProduct();
+    this.closeQuickBrandForm();
   }
 
   showToast(type: ToastType, title: string, message: string) {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = {
-      show: true,
-      type,
-      title,
-      message,
-      icon: icons[type]
-    };
-
-    this.toastTimer = setTimeout(() => {
-      this.closeToast();
-    }, 3500);
+    this.toastController.show(type, title, message, (toast) => this.toast = toast, () => this.closeToast());
   }
 
   closeToast() {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
+    this.toastController.close((toast) => this.toast = toast);
+  }
+
+  private getErrorMessage(error: any, fallback: string): string {
+    if (typeof error?.error === 'string' && error.error.trim()) {
+      return error.error;
     }
+
+    if (typeof error?.error?.message === 'string' && error.error.message.trim()) {
+      return error.error.message;
+    }
+
+    return fallback;
   }
 }

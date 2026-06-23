@@ -5,6 +5,7 @@ import { Layout } from './pages/shared/layout/layout';
 import { Brand } from './pages/item/brand/brand';
 import { ProductComponent } from './pages/item/product/product';
 import { ProductSerialComponent } from './pages/item/product-serial/product-serial';
+import { ProductSerialLifecycleComponent } from './pages/item/product-serial-lifecycle/product-serial-lifecycle';
 import { VendorComponent } from './pages/contacts/vendor/vendor';
 import { CustomerComponent } from './pages/contacts/customer/customer';
 import { PurchaseComponent } from './pages/inventory/purchase/purchase';
@@ -15,6 +16,9 @@ import { Rental } from './pages/inventory/rental/rental';
 import { RentalContractComponent } from './pages/inventory/rental-contract/rental-contract';
 import { RentalList } from './pages/inventory/rental-list/rental-list';
 import { CashAccount } from './pages/cashManagement/cash-account/cash-account';
+import { CashAdjustment } from './pages/cashManagement/cash-adjustment/cash-adjustment';
+import { CashTransfer } from './pages/cashManagement/cash-transfer/cash-transfer';
+import { CashFlowHistory } from './pages/cashManagement/cash-flow-history/cash-flow-history';
 import { ExpenseCategory } from './pages/cashManagement/expense-category/expense-category';
 import { Expense } from './pages/cashManagement/expense/expense';
 import { ChequePrint } from './pages/cashManagement/cheque-print/cheque-print';
@@ -58,6 +62,11 @@ export const routes: Routes = [
         path: 'item/productSerial',
         component: ProductSerialComponent,
         title: 'Machine Serial'
+      },
+      {
+        path: 'item/productSerialLifecycle',
+        component: ProductSerialLifecycleComponent,
+        title: 'Serial Lifecycle'
       },
       {
         path: 'contact/vendor',
@@ -105,6 +114,21 @@ export const routes: Routes = [
         title: 'Cash Account'
       },
       {
+        path: 'cash-management/cash-adjustment',
+        component: CashAdjustment,
+        title: 'Cash In / Cash Out'
+      },
+      {
+        path: 'cash-management/cash-transfer',
+        component: CashTransfer,
+        title: 'Cash Transfer'
+      },
+      {
+        path: 'cash-management/cash-flow-history',
+        component: CashFlowHistory,
+        title: 'Cash Flow History'
+      },
+      {
         path: 'cash-management/expense-category',
         component: ExpenseCategory,
         title: 'Expense Category'
@@ -118,6 +142,54 @@ export const routes: Routes = [
         path: 'cash-management/cheque-print',
         component: ChequePrint,
         title: 'Cheque Print'
+      },
+      {
+        path: 'reports',
+        loadComponent: () => import('./pages/reports/report-dashboard/report-dashboard')
+          .then((m) => m.ReportDashboardComponent),
+        title: 'Reports'
+      },
+      {
+        path: 'reports/serial-status',
+        loadComponent: () => import('./pages/reports/serial-status-report/serial-status-report')
+          .then((m) => m.SerialStatusReportComponent),
+        title: 'Serial Status Report'
+      },
+      {
+        path: 'reports/serial-history',
+        loadComponent: () => import('./pages/reports/serial-history-report/serial-history-report')
+          .then((m) => m.SerialHistoryReportComponent),
+        title: 'Serial History Report'
+      },
+      {
+        path: 'reports/product-summary',
+        loadComponent: () => import('./pages/reports/product-summary-report/product-summary-report')
+          .then((m) => m.ProductSummaryReportComponent),
+        title: 'Product Summary Report'
+      },
+      {
+        path: 'reports/rental-active',
+        loadComponent: () => import('./pages/reports/rental-active-report/rental-active-report')
+          .then((m) => m.RentalActiveReportComponent),
+        title: 'Active Rental Report'
+      },
+      {
+        path: 'reports/rental-history',
+        loadComponent: () => import('./pages/reports/rental-history-report/rental-history-report')
+          .then((m) => m.RentalHistoryReportComponent),
+        title: 'Rental History Report'
+      },
+      {
+        path: 'reports/sales',
+        loadComponent: () => import('./pages/reports/sales-report/sales-report')
+          .then((m) => m.SalesReportComponent),
+        title: 'Serial Sales Report'
+      },
+      {
+        path: 'reports/maintenance',
+        loadComponent: () => import('./pages/reports/maintenance-report/maintenance-report')
+          .then((m) => m.MaintenanceReportComponent),
+        title: 'Maintenance Report'
       },
       {
         path: 'user',

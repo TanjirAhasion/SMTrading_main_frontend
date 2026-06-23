@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-sm-12 mb-2">
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Inventory</label>
@@ -85,28 +85,17 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Filter by Serial, Product, or Brand..." [(ngModel)]="search"
-                                    (keyup.enter)="onSearch()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="onSearch()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
-                                        [disabled]="!search && !selectedStatusId">
-                                        <i class="fas fa-undo mr-1"></i> Reset
-                                    </button>
-                                </div>
+                                    placeholder="Filter by Serial, Product, or Brand..." [(ngModel)]="search">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-6 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Status</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatusId"
-                                (ngModelChange)="onSearch()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatusId">
                                 <option [value]="''">All Statuses</option>
                                 @for (s of serialStatus; track s.id) {
                                 <option [value]="s.id">{{ s.name }}</option>
@@ -116,7 +105,50 @@
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-6 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Activity</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedActiveStatus">
+                                <option [value]="''">All Activity</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Filter by Photo</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedLinkStatus">
+                                <option [value]="''">All Photos</option>
+                                <option value="linked">Linked Photo</option>
+                                <option value="not-linked">Not Linked Photo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Apply Filters</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="onSearch()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                    [disabled]="!search && !selectedStatusId && !selectedLinkStatus && !selectedActiveStatus && !appliedSearch && !appliedStatusId && !appliedLinkStatus && !appliedActiveStatus">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">QR Labels</label>
@@ -124,6 +156,32 @@
                                 (click)="printAllQr()" [disabled]="serials.length === 0">
                                 <i class="fas fa-qrcode mr-1"></i> Print All QR Codes
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="totalCount === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,10 +200,9 @@
 
                             @if (!loading && serials.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mobile-card-table mb-0">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 180px;">Unit Identity</th>
                                             <th>Machine Specification</th>
                                             <th class="text-right">Costs</th>
@@ -157,8 +214,7 @@
                                     <tbody>
                                         @for (item of serials; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ ((page - 1) * pageSize) + i + 1 }}</td>
-                                            <td>
+                                            <td data-label="Unit Identity">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-microchip fa-lg"></i>
@@ -166,18 +222,16 @@
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{
                                                             item.serialNumber }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{
-                                                            item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Machine Specification">
                                                 <span class="font-weight-bold d-block text-sm">{{ item.productName
                                                     }}</span>
                                                 <span class="text-muted text-xs">{{ item.brandName }} | {{ item.model
                                                     }}</span>
                                             </td>
-                                            <td class="text-right">
+                                            <td class="text-right" data-label="Costs">
                                                 <div class="text-sm">
                                                     <span class="text-muted">Buy:</span> {{ item.purchaseCost |
                                                     number:'1.2-2' }}<br>
@@ -185,7 +239,7 @@
                                                         item.sellingCost | number:'1.2-2' }}</span>
                                                 </div>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Linkage">
                                                 @if (item.isSerialNumberLinkToProduct) {
                                                 <span class="badge badge-success p-1 px-2 rounded">
                                                     <i class="fas fa-link mr-1"></i> Linked
@@ -197,20 +251,24 @@
                                                 </button>
                                                 }
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.status === 'InStock',
                                                     'badge-warning text-white': item.status === 'InRent',
                                                     'badge-secondary': item.status === 'Sold',
                                                     'badge-info': item.status === 'InService',
-                                                    'badge-danger': item.status === 'Damaged'
+                                                    'badge-danger': item.status === 'Damaged' || item.status === 'Lost' || item.status === 'Scrapped'
                                                 }">
                                                     <i class="fas fa-circle mr-1 small"></i>
                                                     {{ item.status.replace('In', 'In ') }}
                                                 </span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border"
+                                                        (click)="showSerialDetail(item)" title="View Details">
+                                                        <i class="fas fa-info-circle text-info"></i>
+                                                    </button>
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Unit">
                                                         <i class="fas fa-pencil-alt text-info"></i>
@@ -252,7 +310,7 @@
 
                                 <div class="d-flex align-items-center mt-2 mt-sm-0">
                                     <select class="form-control form-control-sm mr-2" style="width: 80px;"
-                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
                                         <option [ngValue]="5">5</option>
                                         <option [ngValue]="10">10</option>
                                         <option [ngValue]="25">25</option>
@@ -281,6 +339,71 @@
             </div>
         </div>
     </section>
+
+    @if (selectedSerialDetail) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas fa-info-circle mr-2"></i>Machine Serial Details
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeSerialDetail()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Serial Number</dt>
+                                <dd class="col-sm-8 font-weight-bold">{{ selectedSerialDetail.serialNumber }}</dd>
+                                <dt class="col-sm-4">Product ID</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.productId }}</dd>
+                                <dt class="col-sm-4">Product</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.productName || '-' }}</dd>
+                                <dt class="col-sm-4">Brand</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.brandName || '-' }}</dd>
+                                <dt class="col-sm-4">Model</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.model || '-' }}</dd>
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge px-2 py-1" [ngClass]="{
+                                        'badge-success': selectedSerialDetail.status === 'InStock',
+                                        'badge-warning text-white': selectedSerialDetail.status === 'InRent',
+                                        'badge-secondary': selectedSerialDetail.status === 'Sold',
+                                        'badge-info': selectedSerialDetail.status === 'InService',
+                                        'badge-danger': selectedSerialDetail.status === 'Damaged'
+                                    }">
+                                        {{ selectedSerialDetail.status.replace('In', 'In ') }}
+                                    </span>
+                                </dd>
+                                <dt class="col-sm-4">Purchase Cost</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.purchaseCost | number:'1.2-2' }}</dd>
+                                <dt class="col-sm-4">Selling Cost</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.sellingCost | number:'1.2-2' }}</dd>
+                                <dt class="col-sm-4">Rental Cost</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.rentalCost | number:'1.2-2' }}</dd>
+                                <dt class="col-sm-4">Photo Link</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge" [ngClass]="selectedSerialDetail.isSerialNumberLinkToProduct ? 'badge-success' : 'badge-secondary'">
+                                        {{ selectedSerialDetail.isSerialNumberLinkToProduct ? 'Linked' : 'Not Linked' }}
+                                    </span>
+                                </dd>
+                                <dt class="col-sm-4">Linked Image</dt>
+                                <dd class="col-sm-8">{{ selectedSerialDetail.linkedProductSerialNumberImageUrl || '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closeSerialDetail()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
 
     @if (showForm) {
     <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
@@ -341,7 +464,7 @@
                                             <select class="form-control shadow-sm" [(ngModel)]="serial.status"
                                                 name="status">
                                                 @for (s of serialStatus; track s.id) {
-                                                <option [value]="s.id">{{ s.name.replace('In', 'In ') }}</option>
+                                                <option [ngValue]="s.id">{{ s.name.replace('In', 'In ') }}</option>
                                                 }
                                             </select>
                                         </div>

@@ -6,7 +6,7 @@ import { CashAccountDto, CashAccountService } from '../../service/cash-managemen
 import { ExpenseDto, ExpenseService } from '../../service/cash-management/expense.service';
 import { Product, ProductService } from '../../service/item/product.service';
 import { InvoiceService, PagedResult as SalesPagedResult, SaleItem } from '../../service/inventory/invoice-list.service';
-import { PagedResult as RentalPagedResult, RentalItem, RentalListService } from '../../service/inventory/rental-list.service';
+import { PagedResult as RentalPagedResult, RentalContractStatus, RentalItem, RentalListService } from '../../service/inventory/rental-list.service';
 import { PagedResult as PurchasePagedResult, PurchaseItem, PurchaseListService } from '../../service/inventory/purchase-list.service';
 
 interface DashboardMetric {
@@ -380,7 +380,7 @@ export class Dashboard implements OnInit {
   }
 
   private isRentalActive(item: RentalItem): boolean {
-    if (typeof item.status === 'number') return item.status === 1;
+    if (typeof item.status === 'number') return item.status === RentalContractStatus.Active;
     if (typeof item.status === 'string') return item.status.toLowerCase() === 'active';
 
     return item.isActive;

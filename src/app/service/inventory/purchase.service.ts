@@ -7,6 +7,8 @@ export interface CreatePurchaseItemRequest {
   productId: number;
   quantity: number;
   unitCost: number;
+  sellingCost: number;
+  rentalCost: number;
   discount: number;
   productSerialNumber: string[]; // Note: Backend generates these, but DTO includes it
 }
@@ -17,6 +19,7 @@ export interface CreatePurchaseRequest {
   subTotal: number;
   discount: number;
   paidAmount: number;
+  purchaseDate: string;
   cashAccountId: number;
   paymentMethod: string; // 'Cash' or 'Bank'
   items: CreatePurchaseItemRequest[];

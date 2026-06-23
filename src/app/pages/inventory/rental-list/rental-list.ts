@@ -7,6 +7,7 @@ import { PrintService } from '../../../service/common/print.service';
 import {
   RentalContractInvoiceDto,
   RentalContractInvoiceItemDto,
+  RentalContractStatus,
   RentalItem,
   RentalListService,
   SearchRentalDto
@@ -45,6 +46,14 @@ export class RentalList implements OnInit {
   selectedStatus = '';
   selectedCustomerId = '';
   selectedCompanyName = '';
+  rentalStatusOptions = [
+    { value: RentalContractStatus.Draft, label: 'Draft' },
+    { value: RentalContractStatus.Active, label: 'Active' },
+    { value: RentalContractStatus.Suspended, label: 'Suspended' },
+    { value: RentalContractStatus.Completed, label: 'Completed' },
+    { value: RentalContractStatus.Cancelled, label: 'Cancelled' },
+    { value: RentalContractStatus.Overdue, label: 'Overdue' }
+  ];
 
   currentPage = 1;
   itemsPerPage = 10;
@@ -53,6 +62,8 @@ export class RentalList implements OnInit {
 
   totalAmountSum = 0;
   uniqueCustomersCount = 0;
+
+  generatingBillFor: string | number | null = null;
 
   ngOnInit(): void {
     this.loadRentals();
@@ -65,7 +76,7 @@ export class RentalList implements OnInit {
       endDate: this.selectedEndDate ? new Date(this.selectedEndDate).toISOString() : undefined,
       customerId: this.selectedCustomerId || undefined,
       companyName: this.selectedCompanyName || undefined,
-      status: this.selectedStatus || undefined,
+      status: this.selectedStatus ? Number(this.selectedStatus) : undefined,
       pageNumber: this.currentPage,
       pageSize: this.itemsPerPage
     };
@@ -252,10 +263,31 @@ export class RentalList implements OnInit {
     if (!rental) return '-';
 
     if (typeof rental.status === 'number') {
-      return rental.status === 1 ? 'Active' : rental.status === 2 ? 'Closed' : 'Pending';
+      return this.rentalStatusOptions.find((item) => item.value === rental.status)?.label || '-';
     }
 
     return rental.status || (rental.isActive ? 'Active' : 'Closed');
+  }
+
+  getStatusBadgeClass(rental: RentalView | RentalItem | null = this.selectedRental): string {
+    const status = typeof rental?.status === 'number' ? rental.status : this.getStatusNumber(rental?.status);
+
+    switch (status) {
+      case RentalContractStatus.Draft:
+        return 'badge-warning text-white';
+      case RentalContractStatus.Active:
+        return 'badge-success';
+      case RentalContractStatus.Suspended:
+        return 'badge-info';
+      case RentalContractStatus.Completed:
+        return 'badge-secondary';
+      case RentalContractStatus.Cancelled:
+        return 'badge-danger';
+      case RentalContractStatus.Overdue:
+        return 'badge-dark';
+      default:
+        return 'badge-light border';
+    }
   }
 
   getBillingCycle(rental: RentalView | RentalItem | null = this.selectedRental): string {
@@ -334,11 +366,82 @@ export class RentalList implements OnInit {
     );
   }
 
+  canGenerateNextBill(rental: RentalView | RentalItem | null = this.selectedRental): boolean {
+    if (!rental) return false;
+
+    const status = typeof rental.status === 'number'
+      ? rental.status
+      : this.getStatusNumber(rental.status);
+
+    if (status !== null && status !== undefined) {
+      return status === RentalContractStatus.Active;
+    }
+
+    return !!rental.isActive;
+  }
+
+  isGeneratingBill(rental: RentalView | RentalItem | null = this.selectedRental): boolean {
+    if (!rental) return false;
+    return this.generatingBillFor === rental.id;
+  }
+
+  generateNextBill(rental: RentalView | RentalItem, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    if (!rental || !this.canGenerateNextBill(rental)) {
+      alert('This contract is not eligible to generate the next bill.');
+      return;
+    }
+
+    if (this.generatingBillFor !== null) {
+      return;
+    }
+
+    const contractLabel = this.getContractNumber(rental);
+    const confirmed = window.confirm(
+      `Generate the next bill for contract ${contractLabel}?`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    this.generatingBillFor = rental.id;
+    this.cdr.detectChanges();
+
+    this.rentalService.generateNextBill(rental.id).subscribe({
+      next: (invoiceId) => {
+        this.generatingBillFor = null;
+        const displayId = invoiceId ?? 'N/A';
+        alert(`Next bill generated successfully. Invoice ID: ${displayId}`);
+        this.cdr.detectChanges();
+        this.loadRentals();
+      },
+      error: (err) => {
+        this.generatingBillFor = null;
+        console.error('Error generating next bill', err);
+        alert(
+          err?.error?.message ||
+          err?.message ||
+          'Failed to generate next bill. Please try again.'
+        );
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   private formatNumber(value: unknown): string {
     return this.toNumber(value).toFixed(2);
   }
 
   private toNumber(value: unknown): number {
     return Number(value) || 0;
+  }
+
+  private getStatusNumber(status: unknown): RentalContractStatus | null {
+    const value = String(status || '').toLowerCase();
+    const match = this.rentalStatusOptions.find((item) => item.label.toLowerCase() === value);
+    return match?.value || null;
   }
 }

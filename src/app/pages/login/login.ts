@@ -27,6 +27,7 @@ export class LoginComponent {
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly showPassword = signal(false);
 
   login: LoginRequest = {
     username: '',
@@ -36,6 +37,10 @@ export class LoginComponent {
 
   private get returnUrl(): string {
     return this.route.snapshot.queryParams['returnUrl'] ?? '/dashboard';
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((value) => !value);
   }
 
   onLogin(request: LoginRequest): void {
@@ -48,7 +53,7 @@ export class LoginComponent {
         this.router.navigateByUrl(this.returnUrl);
       },
       error: (err) => {
-        this.error.set(err?.error?.message ?? 'Login failed');
+        this.error.set(err?.error?.message ?? err?.message ?? 'Login failed');
         this.isLoading.set(false);
       }
     });

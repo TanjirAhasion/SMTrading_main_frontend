@@ -1,13 +1,12 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrandService } from '../../../service/item/brand.service';
 import { PdfService } from '../../../service/common/pdf.service';
 import { ExcelService } from '../../../service/common/excel.service';
 import { PrintService } from '../../../service/common/print.service';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 import Swal from 'sweetalert2';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
 
 @Component({
   selector: 'app-brand',
@@ -17,23 +16,20 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   styleUrl: './brand.css'
 })
 
-export class Brand {
+export class Brand implements OnInit, OnDestroy {
 
   brands: any[] = [];
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
+  toast: ToastState = createEmptyToast();
   
   showForm = false;
   loading = false;
   search = '';
+  selectedActiveStatus = '';
+  appliedActiveStatus = '';
   page = 1;
   pageSize = 10;
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  selectedBrandDetail: any | null = null;
+  private readonly toastController = new ToastController();
 
   isEditMode = false;
   selectedId: number | null = null;
@@ -59,15 +55,25 @@ export class Brand {
     this.loadBrands();
   }
 
+  ngOnDestroy(): void {
+    this.toastController.destroy();
+  }
+
   get filteredBrands(): any[] {
     const term = this.search.trim().toLowerCase();
+    const status = this.appliedActiveStatus;
 
-    if (!term) return this.brands;
+    return this.brands.filter((item) => {
+      const matchesStatus = !status
+        || (status === 'active' && item.isActive)
+        || (status === 'inactive' && !item.isActive);
 
-    return this.brands.filter((item) =>
-      item.name?.toLowerCase().includes(term)
-      || item.description?.toLowerCase().includes(term)
-    );
+      const matchesSearch = !term
+        || item.name?.toLowerCase().includes(term)
+        || item.description?.toLowerCase().includes(term);
+
+      return matchesStatus && matchesSearch;
+    });
   }
 
   get totalCount(): number {
@@ -108,6 +114,7 @@ export class Brand {
 
         this.brands = [...res];
         this.page = Math.min(this.page, this.totalPages);
+        this.selectedBrandDetail = null;
         this.loading = false;
 
         this.cdr.detectChanges(); // 🔥 FORCE UI REFRESH
@@ -125,12 +132,20 @@ export class Brand {
   }
 
   onSearch() {
+    this.appliedActiveStatus = this.selectedActiveStatus;
+    this.page = 1;
+  }
+
+  onPageSizeChange() {
     this.page = 1;
   }
 
   resetFilters() {
     this.search = '';
+    this.selectedActiveStatus = '';
+    this.appliedActiveStatus = '';
     this.page = 1;
+    this.selectedBrandDetail = null;
   }
 
   onPageChange(newPage: number) {
@@ -199,6 +214,14 @@ export class Brand {
     this.showForm = true;
   }
 
+  showBrandDetail(item: any) {
+    this.selectedBrandDetail = item;
+  }
+
+  closeBrandDetail() {
+    this.selectedBrandDetail = null;
+  }
+
   saveBrand() {
 
     if (!this.brand.name || this.brand.name.trim() === '') {
@@ -228,7 +251,7 @@ export class Brand {
         },
         error: err => {
           console.log(err);
-          this.showToast('danger', 'Update Failed', 'Unable to update the brand. Please try again.');
+          this.showToast('danger', 'Update Failed', this.getErrorMessage(err, 'Unable to update the brand. Please try again.'));
         }
       });
 
@@ -243,7 +266,7 @@ export class Brand {
         },
         error: err => {
           console.log(err);
-          this.showToast('danger', 'Save Failed', 'Unable to add the brand. Please try again.');
+          this.showToast('danger', 'Save Failed', this.getErrorMessage(err, 'Unable to add the brand. Please try again.'));
         }
       });
     }
@@ -284,35 +307,34 @@ export class Brand {
   }
 
   showToast(type: ToastType, title: string, message: string) {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = {
-      show: true,
+    this.toastController.show(
       type,
       title,
       message,
-      icon: icons[type]
-    };
-
-    this.toastTimer = setTimeout(() => {
-      this.closeToast();
-    }, 3500);
+      (toast) => {
+        this.toast = toast;
+        this.cdr.detectChanges();
+      },
+      () => this.closeToast()
+    );
   }
 
   closeToast() {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
+    this.toastController.close((toast) => {
+      this.toast = toast;
+      this.cdr.detectChanges();
+    });
+  }
+
+  private getErrorMessage(error: any, fallback: string): string {
+    if (typeof error?.error === 'string' && error.error.trim()) {
+      return error.error;
     }
+
+    if (typeof error?.error?.message === 'string' && error.error.message.trim()) {
+      return error.error.message;
+    }
+
+    return fallback;
   }
 }

@@ -1,0 +1,4 @@
+[1m[33mOption 'port' has been specified multiple times. The value '4300' will be used.[39m[22m
+[1m[31mPort 4300 is already in use. Use '--port' to specify a different port.[39m[22m
+[1m[31mAn unhandled exception occurred: Port 4300 is already in use. Use '--port' to specify a different port.
+See "C:\Users\user\AppData\Local\Temp\ng-5FnxTo\angular-errors.log" for further details.[39m[22m

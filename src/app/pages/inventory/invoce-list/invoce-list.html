@@ -48,7 +48,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 col-sm-12 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Invoice Number</label>
@@ -59,43 +59,36 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Search Invoice..." [(ngModel)]="searchQuery"
-                                    (keyup.enter)="applyFilters()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="applyFilters()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                </div>
+                                    placeholder="Search Invoice..." [(ngModel)]="searchQuery">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Start Date</label>
                             <input type="date" class="form-control border shadow-sm"
-                                [(ngModel)]="selectedStartDate" (change)="applyFilters()">
+                                [(ngModel)]="selectedStartDate">
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">End Date</label>
                             <input type="date" class="form-control border shadow-sm"
-                                [(ngModel)]="selectedEndDate" (change)="applyFilters()">
+                                [(ngModel)]="selectedEndDate">
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Customer</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedCustomerId">
                                 <option [value]="''">All Customers</option>
                                 @for (c of customers; track c.id) {
                                 <option [value]="c.id">{{ c.name }}</option>
@@ -105,12 +98,11 @@
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Status</label>
-                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatus"
-                                (ngModelChange)="applyFilters()">
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedStatus">
                                 <option [value]="''">All Statuses</option>
                                 <option [value]="'Paid'">Paid</option>
                                 <option [value]="'Pending'">Pending</option>
@@ -120,20 +112,25 @@
                     </div>
                 </div>
 
-                <div class="col-md-1 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
-                            <label class="small text-muted mb-1">Reset</label>
-                            <button type="button" class="btn btn-default btn-block border shadow-sm"
-                                (click)="clearFilters()"
-                                [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
-                                <i class="fas fa-undo"></i>
-                            </button>
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border"
+                                    (click)="clearFilters()"
+                                    [disabled]="!searchQuery && !selectedStartDate && !selectedEndDate && !selectedCustomerId && !selectedStatus">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 col-sm-6 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Reports</label>
@@ -173,10 +170,9 @@
 
                             @if (!loading && invoices.length > 0) {
                             <div class="table-responsive" id="invoicePrintSection">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mobile-card-table mb-0">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 60px;">#</th>
                                             <th style="min-width: 150px;">Invoice Number</th>
                                             <th>Date</th>
                                             <th>Customer Name</th>
@@ -188,21 +184,19 @@
                                     <tbody>
                                         @for (item of invoices; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ ((currentPage - 1) * itemsPerPage) + i + 1 }}</td>
-                                            <td>
+                                            <td data-label="Invoice Number">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-file-invoice-dollar fa-lg"></i>
                                                     </div>
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ item.invoiceNumber }}</span>
-                                                        <small class="text-muted">ID: {{ item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ item.saleDate | date: 'mediumDate' }}</td>
-                                            <td><span class="font-weight-bold">{{ getInvoiceCustomerName(item) }}</span></td>
-                                            <td class="text-center">
+                                            <td data-label="Date">{{ item.saleDate | date: 'mediumDate' }}</td>
+                                            <td data-label="Customer Name"><span class="font-weight-bold">{{ getInvoiceCustomerName(item) }}</span></td>
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': getInvoiceStatus(item) === 'Paid',
                                                     'badge-warning text-white': getInvoiceStatus(item) === 'Pending' || getInvoiceStatus(item) === 'Unpaid',
@@ -212,10 +206,10 @@
                                                     {{ getInvoiceStatus(item) }}
                                                 </span>
                                             </td>
-                                            <td class="text-right font-weight-bold text-primary">
+                                            <td class="text-right font-weight-bold text-primary" data-label="Total Amount">
                                                 {{ getInvoiceTotal(item) | currency }}
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" title="View Invoice" (click)="viewInvoice(item)">
                                                         <i class="fas fa-eye text-primary"></i>
@@ -320,7 +314,6 @@
                         <h6 class="mb-0">{{ selectedInvoice.companyName || getInvoiceCustomerName() }}</h6>
                         <p class="text-muted small mb-0">
                             {{ getInvoiceContactName() }}<br>
-                            Customer ID: {{ selectedInvoice.customerId }}
                         </p>
                     </div>
                     <div class="col-sm-6 text-right">
@@ -333,10 +326,9 @@
                     </div>
                 </div>
 
-                <table class="table table-sm table-striped border">
+                <table class="table table-sm table-striped border mobile-card-table">
                     <thead class="bg-light">
                         <tr>
-                            <th>#</th>
                             <th>Product Description</th>
                             <th class="text-center">Qty</th>
                             <th class="text-right">Unit Price</th>
@@ -347,24 +339,23 @@
                     <tbody>
                         @if (getSelectedInvoiceItems().length > 0) {
                         <tr *ngFor="let item of getSelectedInvoiceItems(); let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ getInvoiceItemName(item) }}</td>
-                            <td class="text-center">{{ item.quantity }}</td>
-                            <td class="text-right">{{ item.unitPrice | number:'1.2-2' }}</td>
-                            <td>{{ getInvoiceItemSerials(item) || '-' }}</td>
-                            <td class="text-right font-weight-bold">{{ getInvoiceItemTotal(item) | number:'1.2-2' }}</td>
+                            <td data-label="Product Description">{{ getInvoiceItemName(item) }}</td>
+                            <td class="text-center" data-label="Qty">{{ item.quantity }}</td>
+                            <td class="text-right" data-label="Unit Price">{{ item.unitPrice | number:'1.2-2' }}</td>
+                            <td data-label="Serials">{{ getInvoiceItemSerials(item) || '-' }}</td>
+                            <td class="text-right font-weight-bold" data-label="Subtotal">{{ getInvoiceItemTotal(item) | number:'1.2-2' }}</td>
                         </tr>
                         } @else {
                         <tr>
-                            <td>1</td>
-                            <td>
+                            <td data-label="#">1</td>
+                            <td data-label="Product Description">
                                 {{ selectedInvoice.invoiceNumber }}
                                 <small class="text-muted d-block">Item details are not available from the list response.</small>
                             </td>
-                            <td class="text-center">-</td>
-                            <td class="text-right">-</td>
-                            <td>-</td>
-                            <td class="text-right font-weight-bold">{{ getInvoiceTotal() | number:'1.2-2' }}</td>
+                            <td class="text-center" data-label="Qty">-</td>
+                            <td class="text-right" data-label="Unit Price">-</td>
+                            <td data-label="Serials">-</td>
+                            <td class="text-right font-weight-bold" data-label="Subtotal">{{ getInvoiceTotal() | number:'1.2-2' }}</td>
                         </tr>
                         }
                     </tbody>

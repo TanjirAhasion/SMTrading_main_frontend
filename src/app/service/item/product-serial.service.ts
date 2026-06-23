@@ -24,6 +24,7 @@ export interface CreateProductSerialDto {
   purchaseCost: number;
   sellingCost: number;
   rentalCost: number;
+  status: ProductSerialStatusEnum;
   legacySerial?: string; 
   isOpeningStock: boolean;
   note?: string;
@@ -33,7 +34,7 @@ export interface UpdateProductSerialDto {
   id: number;
   serialNumber: string;
   productId: number;
-  status: string;
+  status: string | ProductSerialStatusEnum;
   purchaseCost: number;
   sellingCost: number;
   rentalCost: number;
@@ -51,6 +52,16 @@ export interface UpdateProductSerialLinkedDto {
 export interface ProductSerialStatus {
   id: number;
   name: string;
+}
+
+export enum ProductSerialStatusEnum {
+  InStock = 1,
+  Sold = 2,
+  InRent = 3,
+  InService = 4,
+  Damaged = 5,
+  Lost = 6,
+  Scrapped = 7
 }
 
 @Injectable({
@@ -99,7 +110,7 @@ export class ProductSerialService {
     return this.http.get<ProductSerialStatus[]>(`${this.apiUrl}/productSerialStatuses`);
   }
 
-  getSerials(page: number, size: number, search: string = '', status?: number) {
+  getSerials(page: number, size: number, search: string = '', status?: number, isLinkedPhoto?: boolean, isActive?: boolean) {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
@@ -111,6 +122,15 @@ export class ProductSerialService {
     if (status !== undefined) {
       params = params.set('status', status.toString());
     }
+
+    if (isLinkedPhoto !== undefined) {
+      params = params.set('isLinkedPhoto', isLinkedPhoto.toString());
+    }
+
+    if (isActive !== undefined) {
+      params = params.set('isActive', isActive.toString());
+    }
+
     return this.http.get<any>(`${this.apiUrl}/GetAllBySearchWithPagination`, { params });
   }
 }

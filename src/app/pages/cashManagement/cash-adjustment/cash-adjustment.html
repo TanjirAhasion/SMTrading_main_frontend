@@ -1,0 +1,471 @@
+<div class="content-wrapper">
+    @if (toast.show) {
+    <div class="toasts-top-right fixed">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" [ngClass]="'bg-' + toast.type">
+                <i class="{{ toast.icon }} mr-2"></i>
+                <strong class="mr-auto">{{ toast.title }}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">{{ toast.message }}</div>
+        </div>
+    </div>
+    }
+
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold">
+                        <i class="fas fa-exchange-alt mr-2 text-success"></i>Cash In / Cash Out
+                    </h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-info" (click)="openForm(adjustmentType.CashIn)">
+                            <i class="fas fa-arrow-down mr-1"></i> Cash In
+                        </button>
+                        <button class="btn btn-danger" (click)="openForm(adjustmentType.CashOut)">
+                            <i class="fas fa-arrow-up mr-1"></i> Cash Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Entries</span>
+                            <span class="info-box-number text-lg">{{ adjustments.length }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-arrow-down"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Cash In</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(cashInAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-arrow-up"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Cash Out</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(cashOutAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning"><i class="fas fa-calendar-day"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Today Posted</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(todayAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <label class="small text-muted mb-1">From Date</label>
+                                    <input type="date" class="form-control" [(ngModel)]="fromDate">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="small text-muted mb-1">To Date</label>
+                                    <input type="date" class="form-control" [(ngModel)]="toDate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-muted mb-1">Cash Account</label>
+                                    <select class="form-control" [(ngModel)]="cashAccountId">
+                                        <option [ngValue]="null">All accounts</option>
+                                        @for (account of activeCashAccounts; track account.id) {
+                                        <option [ngValue]="account.id">{{ account.name }}</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-muted mb-1">Keyword Search</label>
+                                    <input type="text" class="form-control"
+                                        placeholder="Type, amount, reason, reference, or note..."
+                                        [(ngModel)]="search">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <div class="btn-group w-100">
+                                        <button type="button" class="btn btn-info" (click)="applyFilters()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-default border" (click)="resetFilters()">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Reports</label>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-info btn-block shadow-sm dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    [disabled]="filteredAdjustments.length === 0">
+                                    <i class="fas fa-chart-bar mr-1"></i> Report
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right w-100 shadow border-0">
+                                    <button type="button" class="dropdown-item text-danger" (click)="downloadPdf()">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success" (click)="downloadExcel()">
+                                        <i class="fas fa-file-excel mr-2"></i> Excel
+                                    </button>
+                                    <button type="button" class="dropdown-item text-info" (click)="printReport()">
+                                        <i class="fas fa-print mr-2"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-success shadow-sm">
+                        <div class="card-body p-0">
+                            @if (loading) {
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-success mb-3" role="status"></div>
+                                <p class="text-muted">Loading cash adjustments...</p>
+                            </div>
+                            }
+
+                            @if (!loading && pagedAdjustments.length > 0) {
+                            <div class="table-responsive">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="min-width: 160px;">Date</th>
+                                            <th style="min-width: 150px;">Type</th>
+                                            <th style="min-width: 200px;">Cash Account</th>
+                                            <th class="text-right">Amount</th>
+                                            <th class="text-center pr-3">Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (item of pagedAdjustments; track item.id; let i = $index) {
+                                        <tr>
+                                            <td data-label="Date">
+                                                <span class="badge badge-light border px-3 py-2">
+                                                    <i class="fas fa-calendar-alt mr-1 text-info"></i>
+                                                    {{ formatDate(item.transactionDate) }}
+                                                </span>
+                                            </td>
+                                            <td data-label="Type">
+                                                <span class="badge px-3 py-2" [ngClass]="getTransactionBadgeClass(item.transactionType)">
+                                                    <i class="fas mr-1" [ngClass]="item.transactionType === adjustmentType.CashOut ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                                                    {{ getTransactionTypeName(item.transactionType) }}
+                                                </span>
+                                            </td>
+                                            <td data-label="Cash Account">
+                                                <span class="font-weight-bold d-block text-sm">{{ getCashAccountName(item) }}</span>
+                                            </td>
+                                            <td class="text-right font-weight-bold" data-label="Amount"
+                                                [ngClass]="item.transactionType === adjustmentType.CashOut ? 'text-danger' : 'text-success'" data-label="Amount">
+                                                {{ formatNumber(item.amount) }}
+                                            </td>
+                                            <td class="text-center pr-3" data-label="Details">
+                                                <button type="button" class="btn btn-white btn-sm border"
+                                                    title="View Details" (click)="openDetails(item)">
+                                                    <i class="fas fa-eye text-info"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            }
+
+                            @if (!loading && filteredAdjustments.length === 0) {
+                            <div class="text-center py-5">
+                                <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                                <p class="text-bold mt-3 mb-0 text-muted">No Cash Adjustments Found</p>
+                                <small class="text-muted">Post a Cash In or Cash Out entry to begin.</small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of
+                                    <b>{{ totalCount }}</b> entries
+                                </div>
+
+                                <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                    <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        <option [ngValue]="5">5</option>
+                                        <option [ngValue]="10">10</option>
+                                        <option [ngValue]="25">25</option>
+                                        <option [ngValue]="50">50</option>
+                                    </select>
+
+                                    <ul class="pagination pagination-sm m-0">
+                                        <li class="page-item" [class.disabled]="page === 1">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page - 1)">Previous</button>
+                                        </li>
+                                        <li class="page-item active">
+                                            <span class="page-link shadow-sm bg-success border-success">{{ page }}</span>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="page >= totalPages">
+                                            <button class="page-link" type="button"
+                                                (click)="onPageChange(page + 1)">Next</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (showForm) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header text-white" [ngClass]="isCashOut ? 'bg-danger' : 'bg-info'">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas" [ngClass]="isCashOut ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        <span class="ml-2">{{ isCashOut ? 'Post Cash Out' : 'Post Cash In' }}</span>
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeForm()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <form #adjustmentForm="ngForm">
+                        <div class="card border-0 shadow-sm mb-0">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label font-weight-bold">Type <span class="text-danger">*</span></label>
+                                    <div class="btn-group btn-group-toggle d-flex shadow-sm">
+                                        <label class="btn flex-fill"
+                                            [ngClass]="adjustment.transactionType === adjustmentType.CashIn ? 'btn-success' : 'btn-outline-success'">
+                                            <input type="radio" name="transactionType" [(ngModel)]="adjustment.transactionType"
+                                                [value]="adjustmentType.CashIn" required> Cash In
+                                        </label>
+                                        <label class="btn flex-fill"
+                                            [ngClass]="adjustment.transactionType === adjustmentType.CashOut ? 'btn-danger' : 'btn-outline-danger'">
+                                            <input type="radio" name="transactionType" [(ngModel)]="adjustment.transactionType"
+                                                [value]="adjustmentType.CashOut" required> Cash Out
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">
+                                                Cash Account <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-control shadow-sm" [(ngModel)]="adjustment.cashAccountId"
+                                                name="cashAccountId" #cashAccountField="ngModel" required>
+                                                <option [ngValue]="undefined">Select cash account</option>
+                                                @for (account of activeCashAccounts; track account.id) {
+                                                <option [ngValue]="account.id">{{ account.name }}</option>
+                                                }
+                                            </select>
+                                            @if (cashAccountField.invalid && (cashAccountField.dirty || cashAccountField.touched)) {
+                                            <span class="text-danger small">Cash account is required.</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">
+                                                Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" class="form-control shadow-sm"
+                                                [(ngModel)]="adjustment.transactionDate" name="transactionDate"
+                                                #transactionDateField="ngModel" required>
+                                            @if (transactionDateField.invalid && (transactionDateField.dirty || transactionDateField.touched)) {
+                                            <span class="text-danger small">Date is required.</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <div class="cash-adjustment-balance-box" [class.is-empty]="!selectedCashAccount">
+                                            <div>
+                                                <span class="cash-adjustment-balance-label">Cash Account Balance</span>
+                                                <strong>{{ selectedCashAccount?.name || 'Select account' }}</strong>
+                                            </div>
+                                            <span class="cash-adjustment-balance-amount">
+                                                {{ selectedCashAccount ? formatNumber(selectedCashAccountBalance) : '-' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label font-weight-bold">
+                                                Amount <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group shadow-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                                </div>
+                                                <input type="number" class="form-control" [(ngModel)]="adjustment.amount"
+                                                    name="amount" #amountField="ngModel" min="0.01" step="0.01"
+                                                    placeholder="0.00" required
+                                                    [ngClass]="{'is-invalid': isAmountOverCurrentBalance}">
+                                            </div>
+                                            @if (amountField.invalid && (amountField.dirty || amountField.touched)) {
+                                            <span class="text-danger small">Amount must be greater than zero.</span>
+                                            }
+                                            @if (isAmountOverCurrentBalance) {
+                                            <span class="text-danger small">
+                                                Cash out cannot be more than current balance {{ formatNumber(selectedCashAccountBalance) }}.
+                                            </span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Reference No</label>
+                                            <input type="text" class="form-control shadow-sm"
+                                                [(ngModel)]="adjustment.referenceNo" name="referenceNo"
+                                                maxlength="100" placeholder="Optional reference">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label font-weight-bold">
+                                        Reason <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control shadow-sm"
+                                        [(ngModel)]="adjustment.reason" name="reason" #reasonField="ngModel"
+                                        maxlength="200" placeholder="Owner deposit, bank withdrawal, cash correction..."
+                                        required>
+                                    @if (reasonField.invalid && (reasonField.dirty || reasonField.touched)) {
+                                    <span class="text-danger small">Reason is required.</span>
+                                    }
+                                </div>
+
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Note</label>
+                                    <textarea class="form-control shadow-sm" rows="3" [(ngModel)]="adjustment.note"
+                                        name="note" maxlength="500" placeholder="Optional note"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer bg-white border-0 justify-content-between">
+                    <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
+                    <button type="button" class="btn px-4 shadow-sm" [ngClass]="isCashOut ? 'btn-danger' : 'btn-info'"
+                        (click)="saveAdjustment()" [disabled]="adjustmentForm.invalid || isAmountOverCurrentBalance">
+                        <i class="fas fa-save mr-1"></i> Post {{ isCashOut ? 'Cash Out' : 'Cash In' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+
+    @if (selectedAdjustmentDetails) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-eye mr-2"></i>Cash Entry Details
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeDetails()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <small class="text-muted d-block">Date</small>
+                                    <strong>{{ formatDate(selectedAdjustmentDetails.transactionDate) }}</strong>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <small class="text-muted d-block">Type</small>
+                                    <span class="badge px-3 py-2" [ngClass]="getTransactionBadgeClass(selectedAdjustmentDetails.transactionType)">
+                                        {{ getTransactionTypeName(selectedAdjustmentDetails.transactionType) }}
+                                    </span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <small class="text-muted d-block">Amount</small>
+                                    <strong [ngClass]="selectedAdjustmentDetails.transactionType === adjustmentType.CashOut ? 'text-danger' : 'text-success'">
+                                        {{ formatNumber(selectedAdjustmentDetails.amount) }}
+                                    </strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <small class="text-muted d-block">Cash Account</small>
+                                    <strong>{{ getCashAccountName(selectedAdjustmentDetails) }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <small class="text-muted d-block">Reference</small>
+                                    <strong>{{ selectedAdjustmentDetails.referenceNo || '-' }}</strong>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <small class="text-muted d-block">Reason</small>
+                                    <strong>{{ selectedAdjustmentDetails.reason || '-' }}</strong>
+                                </div>
+                                <div class="col-md-12">
+                                    <small class="text-muted d-block">Note</small>
+                                    <strong>{{ selectedAdjustmentDetails.note || '-' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closeDetails()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+</div>

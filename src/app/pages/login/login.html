@@ -1,49 +1,117 @@
-<div class="login-page dashboard_backgroud">
-  <div class="login-box">
-    <!-- /.login-logo -->
-    <div class="card card-outline card-primary">
-      <div class="card-header text-center">
-        <a href="#" class="h1">
-          SM Treading
-        </a>
+<main class="login-page">
+  <section class="login-shell" aria-label="Sign in">
+    <aside class="brand-panel">
+      <div class="brand-mark">
+        <span>SM</span>
       </div>
-      <div class="card-body">
 
-        <form (ngSubmit)="onLogin(login)">
-          <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Email or username" name="email"
-              [(ngModel)]="login.username" required="">
-          </div>
-
-          <div class="input-group mb-3">
-            <input type="password" class="form-control" placeholder="Password" name="password"
-              [(ngModel)]="login.password" required="">
-          </div>
-
-          <div class="row">
-            <div class="col-8">
-              <input type="checkbox" name="rememberMe" [(ngModel)]="login.rememberMe">
-              <label>Remember Me</label>
-            </div>
-            <!-- /.col -->
-            <div class="col-4">
-              <button type="submit" class="btn btn-primary btn-block">
-                Login
-              </button>
-            </div>
-            <!-- /.col -->
-          </div>
-        </form>
-
-
-        <p class="mb-1">
-          <a href="forgot-password.html">I forgot my password</a>
+      <div class="brand-copy">
+        <p class="eyebrow">Business command center</p>
+        <h1>SM Trading</h1>
+        <p>
+          Manage inventory, sales, rentals, cash accounts, and customer records
+          from one focused workspace.
         </p>
-
       </div>
-      <!-- /.card-body -->
-    </div>
-    <!-- /.card -->
-  </div>
 
-</div>
+      <div class="feature-grid" aria-label="Product highlights">
+        <div class="feature-item">
+          <i class="fas fa-boxes" aria-hidden="true"></i>
+          <span>Inventory</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
+          <span>Invoices</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-wallet" aria-hidden="true"></i>
+          <span>Cash Flow</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="login-card">
+      <div class="login-card-header">
+        <p class="eyebrow">Welcome back</p>
+        <h2>Sign in to your account</h2>
+        <p>Enter your credentials to continue.</p>
+      </div>
+
+      <div class="alert alert-danger" role="alert" *ngIf="error() as message">
+        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+        <span>{{ message }}</span>
+      </div>
+
+      <form (ngSubmit)="onLogin(login)" #loginForm="ngForm" class="login-form">
+        <label class="form-field">
+          <span>Email or username</span>
+          <div class="input-wrap password-wrap">
+            <i class="fas fa-user" aria-hidden="true"></i>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="admin@company.com"
+              name="username"
+              autocomplete="username"
+              [(ngModel)]="login.username"
+              required
+            >
+          </div>
+        </label>
+
+        <label class="form-field">
+          <span>Password</span>
+          <div class="input-wrap">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              class="form-control"
+              placeholder="Enter your password"
+              name="password"
+              autocomplete="current-password"
+              [(ngModel)]="login.password"
+              required
+            >
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.title]="showPassword() ? 'Hide password' : 'Show password'"
+            >
+              <i
+                class="fas"
+                [class.fa-eye]="!showPassword()"
+                [class.fa-eye-slash]="showPassword()"
+                aria-hidden="true"
+              ></i>
+            </button>
+          </div>
+        </label>
+
+        <div class="form-options">
+          <label class="remember-control">
+            <input type="checkbox" name="rememberMe" [(ngModel)]="login.rememberMe">
+            <span>Remember me</span>
+          </label>
+
+          <a href="forgot-password.html">Forgot password?</a>
+        </div>
+
+        <button
+          type="submit"
+          class="btn login-button"
+          [disabled]="isLoading() || loginForm.invalid"
+        >
+          <span
+            class="spinner-border spinner-border-sm"
+            aria-hidden="true"
+            *ngIf="isLoading()"
+          ></span>
+          <i class="fas fa-arrow-right" aria-hidden="true" *ngIf="!isLoading()"></i>
+          <span>{{ isLoading() ? 'Signing in...' : 'Sign in' }}</span>
+        </button>
+      </form>
+    </section>
+  </section>
+</main>

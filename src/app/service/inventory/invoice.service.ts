@@ -20,6 +20,7 @@ export interface CreateInvoiceRequest {
   subTotal: number;
   discount: number;
   paidAmount: number;
+  salesInvoiceDate: string;
   cashAccountId: number;
   paymentMethod: string; // 'Cash' or 'Bank'
   items: SaleItemRequest[];

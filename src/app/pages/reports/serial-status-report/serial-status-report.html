@@ -1,0 +1,38 @@
+<div class="content-wrapper">
+    <div class="content-header"><div class="container-fluid"><h1 class="m-0 font-weight-bold"><i class="fas fa-list-alt mr-2 text-info"></i>Serial Status Report</h1></div></div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body py-3">
+                    <form [formGroup]="filterForm" class="row align-items-end">
+                        <div class="col-md-2 mb-2"><label>Brand</label><select class="form-control" formControlName="brandId"><option value="">All</option>@for (b of brands; track b.id) {<option [value]="b.id">{{ b.name }}</option>}</select></div>
+                        <div class="col-md-3 mb-2"><label>Product</label><select class="form-control" formControlName="productId"><option value="">All</option>@for (p of products; track p.id) {<option [value]="p.id">{{ p.name }} - {{ p.model }}</option>}</select></div>
+                        <div class="col-md-2 mb-2"><label>Status</label><select class="form-control" formControlName="status"><option value="">All</option>@for (s of statuses; track s.id) {<option [value]="s.id">{{ s.name }}</option>}</select></div>
+                        <div class="col-md-2 mb-2"><label>From</label><input type="date" class="form-control" formControlName="fromDate"></div>
+                        <div class="col-md-2 mb-2"><label>To</label><input type="date" class="form-control" formControlName="toDate"></div>
+                        <div class="col-md-1 mb-2"><button type="button" class="btn btn-info btn-block" (click)="loadReport()">Go</button></div>
+                    </form>
+                </div>
+            </div>
+            @if (loading) { <div class="card"><div class="card-body text-center p-5"><div class="spinner-border text-info"></div></div></div> }
+            @if (!loading && report) {
+            <div class="row">
+                @for (card of [
+                    { label: 'Total', value: report.totalSerials, color: 'bg-info', icon: 'fa-barcode' },
+                    { label: 'Available', value: report.availableCount, color: 'bg-success', icon: 'fa-check-circle' },
+                    { label: 'Rented', value: report.rentedCount, color: 'bg-primary', icon: 'fa-hand-holding-usd' },
+                    { label: 'Sold', value: report.soldCount, color: 'bg-secondary', icon: 'fa-file-invoice' },
+                    { label: 'Repair', value: report.repairCount, color: 'bg-warning', icon: 'fa-tools' },
+                    { label: 'Damaged', value: report.damagedCount, color: 'bg-danger', icon: 'fa-exclamation-circle' },
+                    { label: 'Lost', value: report.lostCount, color: 'bg-dark', icon: 'fa-question-circle' },
+                    { label: 'Scrapped', value: report.scrappedCount, color: 'bg-danger', icon: 'fa-trash' }
+                ]; track card.label) {
+                <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm"><span class="info-box-icon text-white" [ngClass]="card.color"><i class="fas" [ngClass]="card.icon"></i></span><div class="info-box-content"><span class="info-box-text">{{ card.label }}</span><span class="info-box-number text-lg">{{ card.value }}</span></div></div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </section>
+</div>

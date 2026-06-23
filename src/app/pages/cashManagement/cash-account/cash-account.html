@@ -58,7 +58,7 @@
                     <div class="info-box shadow-sm">
                         <span class="info-box-icon bg-warning"><i class="fas fa-star"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">Default Accounts</span>
+                            <span class="info-box-text">Default Account</span>
                             <span class="info-box-number text-lg">{{ defaultCount }}</span>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                                 </div>
                                 <input type="text" class="form-control border-left-0"
                                     placeholder="Name, type, account no, holder, bank, or status..."
-                                    [(ngModel)]="search" (keyup.enter)="onSearch()">
+                                    [(ngModel)]="search">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-info" (click)="onSearch()">
                                         <i class="fas fa-search mr-1"></i> Search
@@ -143,10 +143,9 @@
 
                             @if (!loading && pagedAccounts.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 220px;">Account</th>
                                             <th>Type</th>
                                             <th>Account Details</th>
@@ -159,25 +158,23 @@
                                     <tbody>
                                         @for (item of pagedAccounts; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Account">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="{{ getAccountIcon(item) }} fa-lg"></i>
                                                     </div>
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ item.name }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{ item.id }}</small>
                                                         @if (item.isDefault) {
                                                         <small class="badge badge-warning ml-1">Default</small>
                                                         }
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Type">
                                                 <span class="badge badge-info px-3 py-2">{{ getAccountTypeName(item) }}</span>
                                             </td>
-                                            <td>
+                                            <td data-label="Account Details">
                                                 <span class="font-weight-bold d-block text-sm">
                                                     {{ item.accountNumber || '-' }}
                                                 </span>
@@ -185,9 +182,9 @@
                                                     {{ item.accountHolderName || item.bankName || item.note || '-' }}
                                                 </span>
                                             </td>
-                                            <td class="text-right font-weight-bold">{{ formatNumber(item.openingBalance) }}</td>
-                                            <td class="text-right font-weight-bold text-primary">{{ formatNumber(item.currentBalance) }}</td>
-                                            <td class="text-center">
+                                            <td class="text-right font-weight-bold" data-label="Opening">{{ formatNumber(item.openingBalance) }}</td>
+                                            <td class="text-right font-weight-bold text-primary" data-label="Current">{{ formatNumber(item.currentBalance) }}</td>
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isActive,
                                                     'badge-secondary': !item.isActive
@@ -196,12 +193,22 @@
                                                     {{ item.isActive ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Account">
                                                         <i class="fas fa-pencil-alt text-info"></i>
                                                     </button>
+                                                    <button class="btn btn-white btn-sm border" (click)="openHistory(item)"
+                                                        title="Transaction History">
+                                                        <i class="fas fa-history text-info"></i>
+                                                    </button>
+                                                    @if (!item.isDefault) {
+                                                    <button class="btn btn-white btn-sm border" (click)="setDefault(item)"
+                                                        title="Set Default Account">
+                                                        <i class="fas fa-star text-warning"></i>
+                                                    </button>
+                                                    }
                                                     <button class="btn btn-white btn-sm border" (click)="delete(item.id)"
                                                         title="Delete Account">
                                                         <i class="fas fa-trash-alt text-danger"></i>
@@ -264,10 +271,10 @@
 
     @if (showForm) {
     <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title font-weight-light">
+                    <h5 class="modal-title font-weight-bold">
                         <i class="fas" [ngClass]="isEditMode ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
                         <span class="ml-2">{{ isEditMode ? 'Edit Cash Account' : 'Add Cash Account' }}</span>
                     </h5>
@@ -278,10 +285,10 @@
 
                 <div class="modal-body bg-light">
                     <form #accountForm="ngForm">
-                        <div class="card border-0 shadow-sm mb-3">
+                        <div class="card border-0 shadow-sm mb-0">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label font-weight-bold">
                                                 Account Name <span class="text-danger">*</span>
@@ -296,7 +303,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label font-weight-bold">
                                                 Account Type <span class="text-danger">*</span>
@@ -310,8 +317,8 @@
                                         </div>
                                     </div>
 
-                                    @if (account.accountType === cashAccountType.MobileBank) {
-                                    <div class="col-md-4">
+                                    @if (account.accountType === cashAccountType.MobileBanking) {
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Mobile Bank Type</label>
                                             <select class="form-control shadow-sm" [(ngModel)]="account.mobileBankType"
@@ -327,7 +334,7 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Account Number</label>
                                             <input type="text" class="form-control shadow-sm"
@@ -336,7 +343,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Account Holder</label>
                                             <input type="text" class="form-control shadow-sm"
@@ -346,7 +353,7 @@
                                     </div>
 
                                     @if (account.accountType === cashAccountType.Bank) {
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Bank Name</label>
                                             <input type="text" class="form-control shadow-sm"
@@ -358,7 +365,7 @@
 
                                 @if (account.accountType === cashAccountType.Bank) {
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Branch Name</label>
                                             <input type="text" class="form-control shadow-sm"
@@ -370,7 +377,7 @@
                                 }
 
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Opening Balance</label>
                                             <input type="number" class="form-control shadow-sm"
@@ -379,34 +386,20 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Current Balance</label>
-                                            <input type="number" class="form-control shadow-sm"
-                                                [(ngModel)]="account.currentBalance" name="currentBalance" min="0"
-                                                step="0.01">
+                                            <div class="form-control bg-light shadow-sm d-flex align-items-center font-weight-bold">
+                                                {{ isEditMode ? formatNumber(account.currentBalance) : formatNumber(account.openingBalance) }}
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ isEditMode ? 'Current balance is updated by cash transactions.' : 'Current balance will start from opening balance.' }}
+                                            </small>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Note</label>
-                                    <textarea class="form-control shadow-sm" rows="2" [(ngModel)]="account.note"
-                                        name="note" placeholder="Optional note"></textarea>
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <label class="form-label d-block">Default</label>
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input" id="accountIsDefault"
-                                                [(ngModel)]="account.isDefault" name="isDefault">
-                                            <label class="custom-control-label font-weight-bold" for="accountIsDefault">
-                                                Default Account
-                                            </label>
-                                        </div>
-                                    </div>
-
                                     <div class="col-md-6">
                                         <label class="form-label d-block">Status</label>
                                         <div class="custom-control custom-switch">
@@ -417,6 +410,18 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label d-block">Default Account</label>
+                                        <div class="text-muted small">
+                                            Use the star button in the account list to choose the single default account.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mt-3 mb-0">
+                                    <label class="form-label">Note</label>
+                                    <textarea class="form-control shadow-sm" rows="2" [(ngModel)]="account.note"
+                                        name="note" placeholder="Optional note"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -425,10 +430,195 @@
 
                 <div class="modal-footer bg-white border-0 justify-content-between">
                     <button type="button" class="btn btn-default shadow-sm" (click)="closeForm()">Cancel</button>
-                    <button type="button" class="btn btn-success px-4 shadow-sm" (click)="saveAccount()"
+                    <button type="button" class="btn btn-info px-4 shadow-sm" (click)="saveAccount()"
                         [disabled]="accountForm.invalid">
                         <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update Account' : 'Save Account' }}
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+
+    @if (showHistoryModal) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg cash-history-modal">
+                <div class="modal-header bg-dark text-white cash-history-header">
+                    <h5 class="modal-title font-weight-bold mb-0">
+                        <i class="fas fa-history mr-2"></i>Transaction History
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeHistory()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light p-3">
+                    <div class="history-account-strip mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="history-account-icon mr-3">
+                                <i class="{{ getAccountIcon(selectedHistoryAccount || {}) }}"></i>
+                            </div>
+                            <div>
+                                <div class="history-account-name">{{ selectedHistoryAccount?.name || '-' }}</div>
+                                <div class="history-account-meta">
+                                    {{ selectedHistoryAccount ? getAccountTypeName(selectedHistoryAccount) : '-' }}
+                                    @if (selectedHistoryAccount?.accountNumber) {
+                                    <span class="mx-2">|</span>
+                                    <span>{{ selectedHistoryAccount?.accountNumber }}</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="history-balance-grid mb-3">
+                        <div class="history-balance-tile">
+                            <span class="history-tile-label">Opening Balance</span>
+                            <strong class="history-tile-value text-dark">{{ formatNumber(historyAccountOpeningBalance) }}</strong>
+                        </div>
+                        <div class="history-balance-tile history-balance-current">
+                            <span class="history-tile-label">Current Balance</span>
+                            <strong class="history-tile-value text-primary">{{ formatNumber(historyAccountCurrentBalance) }}</strong>
+                        </div>
+                        <div class="history-balance-tile">
+                            <span class="history-tile-label">This Page Cash In</span>
+                            <strong class="history-tile-value text-success">+ {{ formatNumber(historyPageCashIn) }}</strong>
+                        </div>
+                        <div class="history-balance-tile">
+                            <span class="history-tile-label">This Page Cash Out</span>
+                            <strong class="history-tile-value text-danger">- {{ formatNumber(historyPageCashOut) }}</strong>
+                        </div>
+                    </div>
+
+                    @if (historyLoading) {
+                    <div class="text-center p-5 bg-white rounded shadow-sm">
+                        <div class="spinner-border text-info mb-3" role="status"></div>
+                        <p class="text-muted">Loading transaction history...</p>
+                    </div>
+                    }
+
+                    @if (!historyLoading && historyTransactions.length > 0) {
+                    <div class="table-responsive bg-white rounded shadow-sm history-table-wrap">
+                        <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Source</th>
+                                    <th>Reference</th>
+                                    <th class="text-right">Debit</th>
+                                    <th class="text-right">Credit</th>
+                                    <th class="text-center">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of historyTransactions; track item.id; let i = $index) {
+                                <tr>
+                                    <td data-label="Date">{{ formatDate(item.transactionDate) }}</td>
+                                    <td data-label="Type">
+                                        <span class="badge px-3 py-2" [ngClass]="getTransactionBadgeClass(item.transactionType)">
+                                            {{ getTransactionTypeName(item.transactionType) }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Source">{{ getSourceTypeName(item.sourceType) }}</td>
+                                    <td data-label="Reference">{{ item.referenceNumber || item.referenceId || '-' }}</td>
+                                    <td class="text-right font-weight-bold text-danger" data-label="Debit">
+                                        {{ item.transactionType === 2 ? formatNumber(item.amount) : '-' }}
+                                    </td>
+                                    <td class="text-right font-weight-bold text-success" data-label="Credit">
+                                        {{ item.transactionType === 1 ? formatNumber(item.amount) : '-' }}
+                                    </td>
+                                    <td class="text-center" data-label="Details">
+                                        <button type="button" class="btn btn-white btn-sm border"
+                                            title="View Details" (click)="viewHistoryDetails(item)">
+                                            <i class="fas fa-eye text-info"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+
+                    @if (!historyLoading && selectedHistoryTransaction) {
+                    <div class="history-detail-panel mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="font-weight-bold mb-0">
+                                <i class="fas fa-receipt text-info mr-1"></i>Transaction Details
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-default border" (click)="closeHistoryDetails()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Date</small>
+                                <strong>{{ formatDate(selectedHistoryTransaction.transactionDate) }}</strong>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Type</small>
+                                <strong>{{ getTransactionTypeName(selectedHistoryTransaction.transactionType) }}</strong>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Source</small>
+                                <strong>{{ getSourceTypeName(selectedHistoryTransaction.sourceType) }}</strong>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Reference</small>
+                                <strong>{{ selectedHistoryTransaction.referenceNumber || selectedHistoryTransaction.referenceId || '-' }}</strong>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Debit</small>
+                                <strong class="text-danger">{{ selectedHistoryTransaction.transactionType === 2 ? formatNumber(selectedHistoryTransaction.amount) : '-' }}</strong>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <small class="text-muted d-block">Credit</small>
+                                <strong class="text-success">{{ selectedHistoryTransaction.transactionType === 1 ? formatNumber(selectedHistoryTransaction.amount) : '-' }}</strong>
+                            </div>
+                            <div class="col-md-6 col-sm-12 mb-2">
+                                <small class="text-muted d-block">Note</small>
+                                <strong>{{ selectedHistoryTransaction.note || '-' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    }
+
+                    @if (!historyLoading && historyTransactions.length === 0) {
+                    <div class="text-center py-5 bg-white rounded shadow-sm">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-bold mt-3 mb-0 text-muted">No Transactions Found</p>
+                    </div>
+                    }
+                </div>
+
+                <div class="modal-footer bg-white justify-content-between">
+                    <div class="text-muted small">
+                        Showing <b>{{ getHistoryPageStart() }}</b> to <b>{{ getHistoryPageEnd() }}</b> of
+                        <b>{{ historyTotalCount }}</b> transactions
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                            [(ngModel)]="historyPageSize" (ngModelChange)="onHistoryPageSizeChange()">
+                            <option [ngValue]="5">5</option>
+                            <option [ngValue]="10">10</option>
+                            <option [ngValue]="25">25</option>
+                            <option [ngValue]="50">50</option>
+                        </select>
+                        <ul class="pagination pagination-sm m-0">
+                            <li class="page-item" [class.disabled]="historyPage === 1">
+                                <button class="page-link" type="button" (click)="onHistoryPageChange(historyPage - 1)">Previous</button>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link shadow-sm bg-info border-info">{{ historyPage }}</span>
+                            </li>
+                            <li class="page-item" [class.disabled]="historyPage >= historyTotalPages">
+                                <button class="page-link" type="button" (click)="onHistoryPageChange(historyPage + 1)">Next</button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

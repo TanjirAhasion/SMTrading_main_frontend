@@ -32,7 +32,7 @@ export class ProductService {
     return this.http.get<Product[]>(this.apiUrl);
   }
 
-  getWithStock(page: number, size: number, search: string = '', status?: number) {
+  getWithStock(page: number, size: number, search: string = '', status?: number, isActive?: boolean) {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
@@ -43,6 +43,10 @@ export class ProductService {
     
     if (status !== undefined) {
       params = params.set('status', status.toString());
+    }
+
+    if (isActive !== undefined) {
+      params = params.set('isActive', isActive.toString());
     }
     return this.http.get<any>(`${this.apiUrl}/GetAllBySearchWithPagination`, { params });
   }

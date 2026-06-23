@@ -36,7 +36,7 @@
     <section class="content">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-4 col-sm-6 col-12">
+                <div class="col-md-3 col-sm-6 col-12">
                     <div class="info-box shadow-sm">
                         <span class="info-box-icon bg-info"><i class="fas fa-truck-loading"></i></span>
                         <div class="info-box-content">
@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 col-12">
+                <div class="col-md-3 col-sm-6 col-12">
                     <div class="info-box shadow-sm">
                         <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
                         <div class="info-box-content">
@@ -56,7 +56,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 col-12">
+                <div class="col-md-3 col-sm-6 col-12">
                     <div class="info-box shadow-sm">
                         <span class="info-box-icon bg-secondary"><i class="fas fa-pause-circle"></i></span>
                         <div class="info-box-content">
@@ -65,10 +65,20 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning"><i class="fas fa-hand-holding-usd"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Vendor Due</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(totalDueAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
-                <div class="col-md-9 col-sm-12 mb-2">
+                <div class="col-md-4 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Vendors</label>
@@ -79,23 +89,43 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Name, company, phone, or email..." [(ngModel)]="search"
-                                    (keyup.enter)="onSearch()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="onSearch()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
-                                        [disabled]="!search">
-                                        <i class="fas fa-undo mr-1"></i> Reset
-                                    </button>
-                                </div>
+                                    placeholder="Name, company, phone, or email..." [(ngModel)]="search">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-12 mb-2">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Status</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedActiveStatus">
+                                <option [value]="''">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="onSearch()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                    [disabled]="!search && !selectedActiveStatus && !appliedActiveStatus" title="Reset filters">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Reports</label>
@@ -135,13 +165,13 @@
 
                             @if (!loading && pagedVendors.length > 0) {
                             <div class="table-responsive">
-                                <table class="table table-hover table-valign-middle mb-0">
+                                <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 220px;">Vendor Identity</th>
                                             <th>Company</th>
                                             <th>Contact</th>
+                                            <th class="text-right">Due</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center pr-3">Actions</th>
                                         </tr>
@@ -149,8 +179,7 @@
                                     <tbody>
                                         @for (item of pagedVendors; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Vendor Identity">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-user-tie fa-lg"></i>
@@ -159,19 +188,22 @@
                                                         <span class="d-block font-weight-bold text-dark">
                                                             {{ item.firstName }} {{ item.lastName }}
                                                         </span>
-                                                        <small class="badge badge-light border text-muted">ID: {{
-                                                            item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Company">
                                                 <span class="text-muted text-sm">{{ item.companyName || '-' }}</span>
                                             </td>
-                                            <td>
+                                            <td data-label="Contact">
                                                 <span class="font-weight-bold d-block text-sm">{{ item.phone }}</span>
                                                 <span class="text-muted text-xs">{{ item.email || '-' }}</span>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-right" data-label="Due">
+                                                <span class="font-weight-bold" [ngClass]="(item.dueAmount || 0) > 0 ? 'text-danger' : 'text-muted'">
+                                                    {{ formatNumber(item.dueAmount) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center" data-label="Status">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isActive,
                                                     'badge-secondary': !item.isActive
@@ -180,11 +212,19 @@
                                                     {{ item.isActive ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td>
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
                                                     <button class="btn btn-white btn-sm border"
                                                         title="Create Purchase" (click)="createPurchase(item)">
                                                         <i class="fas fa-shopping-cart text-success"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border"
+                                                        title="Purchase Invoices" (click)="openInvoiceModal(item)">
+                                                        <i class="fas fa-file-invoice text-primary"></i>
+                                                    </button>
+                                                    <button class="btn btn-white btn-sm border"
+                                                        title="Payment History" (click)="openPaymentHistoryModal(item)">
+                                                        <i class="fas fa-history text-warning"></i>
                                                     </button>
                                                     <button class="btn btn-white btn-sm border"
                                                         (click)="toggleForm(true, item)" title="Edit Vendor">
@@ -221,7 +261,7 @@
 
                                 <div class="d-flex align-items-center mt-2 mt-sm-0">
                                     <select class="form-control form-control-sm mr-2" style="width: 80px;"
-                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
                                         <option [ngValue]="5">5</option>
                                         <option [ngValue]="10">10</option>
                                         <option [ngValue]="25">25</option>
@@ -249,6 +289,306 @@
             </div>
         </div>
     </section>
+
+    @if (showInvoiceModal && selectedVendor) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg vendor-modal">
+                <div class="modal-header bg-info text-white vendor-modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-file-invoice mr-2"></i>Purchase Invoices
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeInvoiceModal()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="vendor-due-summary mb-3">
+                        <div class="vendor-summary-info">
+                            <h6 class="font-weight-bold mb-1">{{ selectedVendor.firstName }} {{ selectedVendor.lastName }}</h6>
+                            <small class="text-muted">{{ selectedVendor.companyName || selectedVendor.phone || 'No company' }}</small>
+                        </div>
+                        <div class="vendor-summary-due text-right">
+                            <small class="text-muted d-block">Vendor Due</small>
+                            <span class="vendor-due-amount">{{ formatNumber(selectedVendor.dueAmount) }}</span>
+                        </div>
+                    </div>
+
+                    @if (loadingInvoices && vendorInvoices.length === 0) {
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                        <p class="text-muted mb-0">Loading invoices...</p>
+                    </div>
+                    }
+
+                    @if (!loadingInvoices && vendorInvoices.length === 0) {
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                        <p class="text-bold text-muted mb-0">No Purchase Invoices Found</p>
+                    </div>
+                    }
+
+                    @if (vendorInvoices.length > 0) {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover table-valign-middle mobile-card-table">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Invoice</th>
+                                    <th>Date</th>
+                                    <th class="text-right">Total</th>
+                                    <th class="text-right">Paid</th>
+                                    <th class="text-right">Due</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (invoice of vendorInvoices; track invoice.id) {
+                                <tr>
+                                    <td class="font-weight-bold" data-label="Invoice">{{ invoice.purchaseNumber }}</td>
+                                    <td data-label="Date">{{ invoice.purchaseDate | date:'mediumDate' }}</td>
+                                    <td class="text-right" data-label="Total">{{ formatNumber((invoice.subTotal || 0) - (invoice.discount || 0)) }}</td>
+                                    <td class="text-right" data-label="Paid">{{ formatNumber(invoice.paidAmount || invoice.amount || 0) }}</td>
+                                    <td class="text-right text-danger font-weight-bold" data-label="Due">{{ formatNumber(getInvoiceDue(invoice)) }}</td>
+                                    <td class="text-center" data-label="Status">
+                                        <span class="badge" [ngClass]="invoice.isPaid ? 'badge-success' : 'badge-warning'">
+                                            {{ invoice.isPaid ? 'Paid' : 'Due' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+                </div>
+
+                <div class="modal-footer bg-white justify-content-between">
+                    <small class="text-muted">Showing {{ vendorInvoices.length }} of {{ invoiceTotalCount }} invoices</small>
+                    <div>
+                        @if (hasMoreInvoices) {
+                        <button type="button" class="btn btn-outline-primary mr-2" [disabled]="loadingInvoices"
+                            (click)="viewMoreInvoices()">
+                            <i class="fas fa-list mr-1"></i> View More
+                        </button>
+                        }
+                        <button type="button" class="btn btn-default" (click)="closeInvoiceModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+
+    @if (showPaymentHistoryModal && selectedVendor) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg vendor-modal">
+                <div class="modal-header bg-info text-white vendor-modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-history mr-2"></i>Payment History
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closePaymentHistoryModal()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <div class="vendor-due-summary vendor-due-summary-wide mb-3">
+                        <div class="vendor-summary-info">
+                            <h6 class="font-weight-bold mb-1">{{ selectedVendor.firstName }} {{ selectedVendor.lastName }}</h6>
+                            <small class="text-muted">{{ selectedVendor.companyName || selectedVendor.phone }}</small>
+                        </div>
+                        <div class="vendor-summary-balance">
+                            <small class="text-muted d-block">Current Balance</small>
+                            <span class="vendor-balance-amount">
+                                {{ selectedPaymentCashAccount ? formatNumber(selectedPaymentCashBalance) : '-' }}
+                            </span>
+                            @if (selectedPaymentCashAccount) {
+                            <small class="d-block text-muted">{{ selectedPaymentCashAccount.name }}</small>
+                            }
+                        </div>
+                        <div class="vendor-summary-due text-right">
+                            <small class="text-muted d-block">Vendor Due</small>
+                            <span class="vendor-due-amount">{{ formatNumber(selectedVendor.dueAmount) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-5 mb-3">
+                            <div class="card border-0 shadow-sm h-100 vendor-payment-panel">
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label class="form-label font-weight-bold">Action</label>
+                                        <select class="form-control" [(ngModel)]="paymentForm.actionType" name="vendorPaymentAction">
+                                            <option [ngValue]="1">Pay Due</option>
+                                            <option [ngValue]="2">Discount</option>
+                                            <option [ngValue]="3">Adjustment</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label font-weight-bold">Amount</label>
+                                        <input type="number" min="0" class="form-control" [(ngModel)]="paymentForm.amount"
+                                            name="vendorPaymentAmount">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label font-weight-bold">Payment Date</label>
+                                        <input type="date" class="form-control" [(ngModel)]="paymentForm.paymentDate"
+                                            name="vendorPaymentDate">
+                                    </div>
+
+                                    @if (paymentForm.actionType === 1) {
+                                    <div class="form-group">
+                                        <label class="form-label font-weight-bold">Cash Account</label>
+                                        <select class="form-control" [(ngModel)]="paymentForm.cashAccountId"
+                                            name="vendorPaymentCashAccount">
+                                            <option [ngValue]="null">Select cash account</option>
+                                            @for (account of activeCashAccounts; track account.id) {
+                                            <option [ngValue]="account.id">
+                                                {{ account.name }} - {{ formatNumber(account.currentBalance) }}
+                                            </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    }
+
+                                    <div class="form-group">
+                                        <label class="form-label">Note</label>
+                                        <textarea class="form-control" rows="2" [(ngModel)]="paymentForm.note"
+                                            name="vendorPaymentNote"></textarea>
+                                    </div>
+
+                                    <button type="button" class="btn btn-success btn-lg btn-block" [disabled]="savingPayment || selectedVendor.dueAmount <= 0"
+                                        (click)="submitDuePayment()">
+                                        <i class="fas fa-money-bill-wave mr-1"></i> Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-0">
+                                    @if (loadingPaymentHistory) {
+                                    <div class="text-center p-4">
+                                        <div class="spinner-border text-warning mb-2" role="status"></div>
+                                        <p class="text-muted mb-0">Loading payment history...</p>
+                                    </div>
+                                    }
+
+                                    @if (!loadingPaymentHistory && paymentHistory.length === 0) {
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                                        <p class="text-bold text-muted mb-0">No Payment History Found</p>
+                                    </div>
+                                    }
+
+                                    @if (!loadingPaymentHistory && paymentHistory.length > 0) {
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover table-valign-middle mb-0 mobile-card-table">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Type</th>
+                                                    <th class="text-right">Debit</th>
+                                                    <th class="text-right">Credit</th>
+                                                    <th class="text-right">Balance</th>
+                                                    <th class="text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (history of paymentHistory; track history.id) {
+                                                <tr>
+                                                    <td data-label="Date">{{ history.transactionDate | date:'mediumDate' }}</td>
+                                                    <td data-label="Type">
+                                                        <span class="badge" [ngClass]="history.credit > 0 ? 'badge-success' : 'badge-info'">
+                                                            {{ history.sourceTypeName }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-right" data-label="Debit">{{ formatNumber(history.debit) }}</td>
+                                                    <td class="text-right" data-label="Credit">{{ formatNumber(history.credit) }}</td>
+                                                    <td class="text-right font-weight-bold" data-label="Balance">{{ formatNumber(history.balance) }}</td>
+                                                    <td class="text-center" data-label="Actions">
+                                                        <button type="button" class="btn btn-sm btn-white border"
+                                                            title="View Details" (click)="showPaymentHistoryDetail(history)">
+                                                            <i class="fas fa-info-circle text-info"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closePaymentHistoryModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
+
+    @if (selectedPaymentHistoryDetail) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas fa-info-circle mr-2"></i>Transaction Details
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closePaymentHistoryDetail()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Vendor</dt>
+                                <dd class="col-sm-8 font-weight-bold">{{ selectedPaymentHistoryDetail.vendorName || '-' }}</dd>
+                                <dt class="col-sm-4">Company</dt>
+                                <dd class="col-sm-8">{{ selectedPaymentHistoryDetail.companyName || '-' }}</dd>
+                                <dt class="col-sm-4">Purchase ID</dt>
+                                <dd class="col-sm-8">{{ selectedPaymentHistoryDetail.purchaseId || '-' }}</dd>
+                                <dt class="col-sm-4">Date</dt>
+                                <dd class="col-sm-8">{{ selectedPaymentHistoryDetail.transactionDate | date:'mediumDate' }}</dd>
+                                <dt class="col-sm-4">Source Type</dt>
+                                <dd class="col-sm-8">
+                                    {{ selectedPaymentHistoryDetail.sourceTypeName || '-' }}
+                                    <span class="text-muted">({{ selectedPaymentHistoryDetail.sourceType }})</span>
+                                </dd>
+                                <dt class="col-sm-4">Amount</dt>
+                                <dd class="col-sm-8">{{ formatNumber(selectedPaymentHistoryDetail.amount) }}</dd>
+                                <dt class="col-sm-4">Debit</dt>
+                                <dd class="col-sm-8">{{ formatNumber(selectedPaymentHistoryDetail.debit) }}</dd>
+                                <dt class="col-sm-4">Credit</dt>
+                                <dd class="col-sm-8">{{ formatNumber(selectedPaymentHistoryDetail.credit) }}</dd>
+                                <dt class="col-sm-4">Balance</dt>
+                                <dd class="col-sm-8 font-weight-bold">{{ formatNumber(selectedPaymentHistoryDetail.balance) }}</dd>
+                                <dt class="col-sm-4">Description</dt>
+                                <dd class="col-sm-8">{{ selectedPaymentHistoryDetail.description || '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closePaymentHistoryDetail()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="z-index: 1055;"></div>
+    }
 
     @if (showForm) {
     <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">

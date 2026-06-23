@@ -78,7 +78,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6 col-sm-12 mb-2">
+                <div class="col-md-3 col-sm-12 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Search Machines</label>
@@ -89,23 +89,13 @@
                                     </span>
                                 </div>
                                 <input type="text" class="form-control border-left-0"
-                                    placeholder="Name, model, or brand..." [(ngModel)]="search"
-                                    (keyup.enter)="onSearch()">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-info" (click)="onSearch()">
-                                        <i class="fas fa-search mr-1"></i> Search
-                                    </button>
-                                    <button type="button" class="btn btn-default border" (click)="resetFilters()"
-                                        [disabled]="!search && !selectedBrandId">
-                                        <i class="fas fa-undo mr-1"></i> Reset
-                                    </button>
-                                </div>
+                                    placeholder="Name, model, or brand..." [(ngModel)]="search">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-2">
+                <div class="col-md-2 col-sm-6 mb-2">
                     <div class="card shadow-sm border-0 h-100 mb-0">
                         <div class="card-body py-2">
                             <label class="small text-muted mb-1">Filter by Brand</label>
@@ -115,6 +105,36 @@
                                 <option [value]="b.id">{{ b.name }}</option>
                                 }
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Status</label>
+                            <select class="form-control border shadow-sm" [(ngModel)]="selectedActiveStatus">
+                                <option [value]="''">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <div class="card shadow-sm border-0 h-100 mb-0">
+                        <div class="card-body py-2">
+                            <label class="small text-muted mb-1">Actions</label>
+                            <div class="btn-group btn-block shadow-sm">
+                                <button type="button" class="btn btn-info" (click)="onSearch()">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-default border" (click)="resetFilters()"
+                                    [disabled]="!search && !selectedBrandId && !selectedActiveStatus && !appliedActiveStatus">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -159,10 +179,9 @@
 
                             @if (!loading && pagedProducts.length > 0) {
                             <div class="table-responsive">
-                                <table id="brandLoadDataTables" class="table table-hover table-valign-middle mb-0">
+                                <table id="brandLoadDataTables" class="table table-hover table-valign-middle mobile-card-table mb-0">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="pl-3" style="width: 50px;">#</th>
                                             <th style="min-width: 220px;">Machine Identity</th>
                                             <th>Brand & Model</th>
                                             <th class="text-right">Pricing</th>
@@ -173,8 +192,7 @@
                                     <tbody>
                                         @for (item of pagedProducts; track item.id; let i = $index) {
                                         <tr>
-                                            <td class="pl-3 text-muted">{{ pageStart + i }}</td>
-                                            <td>
+                                            <td data-label="Machine Identity">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-soft-info p-2 rounded mr-3 text-info">
                                                         <i class="fas fa-cog fa-lg"></i>
@@ -182,17 +200,15 @@
                                                     <div>
                                                         <span class="d-block font-weight-bold text-dark">{{ item.name
                                                             }}</span>
-                                                        <small class="badge badge-light border text-muted">ID: {{
-                                                            item.id }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Brand & Model">
                                                 <span class="font-weight-bold d-block text-sm">{{ item.brandName || '-'
                                                     }}</span>
                                                 <span class="text-muted text-xs">{{ item.model }}</span>
                                             </td>
-                                            <td class="text-right">
+                                            <td class="text-right" data-label="Pricing">
                                                 <div class="text-sm">
                                                     <span class="text-muted">Sale:</span>
                                                     <span class="text-primary">{{ item.defaultSalePrice |
@@ -201,7 +217,7 @@
                                                     number:'1.2-2' }}
                                                 </div>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center" data-label="Stock">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-danger': item.inStock <= item.lowStockThreshold,
                                                     'badge-success': item.inStock > item.lowStockThreshold
@@ -211,7 +227,7 @@
                                                 <small class="d-block text-muted mt-1">Low at {{
                                                     item.lowStockThreshold }}</small>
                                             </td>
-                                            <!-- <td class="text-center">
+                                            <!-- <td class="text-center" data-label="#">
                                                 <span class="badge px-3 py-2 rounded-pill" [ngClass]="{
                                                     'badge-success': item.isActive,
                                                     'badge-secondary': !item.isActive
@@ -220,8 +236,12 @@
                                                     {{ item.isActive ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td> -->
-                                            <td class="text-center pr-3">
+                                            <td class="text-center pr-3" data-label="Actions">
                                                 <div class="btn-group shadow-sm">
+                                                    <button class="btn btn-white btn-sm border"
+                                                        title="View Details" (click)="showProductDetail(item)">
+                                                        <i class="fas fa-info-circle text-info"></i>
+                                                    </button>
                                                     <button class="btn btn-white btn-sm border" (click)="edit(item)"
                                                         title="Edit Machine">
                                                         <i class="fas fa-pencil-alt text-info"></i>
@@ -257,7 +277,7 @@
 
                                 <div class="d-flex align-items-center mt-2 mt-sm-0">
                                     <select class="form-control form-control-sm mr-2" style="width: 80px;"
-                                        [(ngModel)]="pageSize" (ngModelChange)="onSearch()">
+                                        [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
                                         <option [ngValue]="5">5</option>
                                         <option [ngValue]="10">10</option>
                                         <option [ngValue]="25">25</option>
@@ -285,6 +305,59 @@
             </div>
         </div>
     </section>
+
+    @if (selectedProductDetail) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-light">
+                        <i class="fas fa-info-circle mr-2"></i>Machine Details
+                    </h5>
+                    <button type="button" class="close text-white" (click)="closeProductDetail()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Machine Name</dt>
+                                <dd class="col-sm-8 font-weight-bold">{{ selectedProductDetail.name }}</dd>
+                                <dt class="col-sm-4">Brand</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.brandName || '-' }}</dd>
+                                <dt class="col-sm-4">Model</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.model || '-' }}</dd>
+                                <dt class="col-sm-4">Sale Price</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.defaultSalePrice | number:'1.2-2' }}</dd>
+                                <dt class="col-sm-4">Rent Price</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.defaultRentPrice | number:'1.2-2' }}</dd>
+                                <dt class="col-sm-4">Available Stock</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.inStock || 0 }}</dd>
+                                <dt class="col-sm-4">Rented</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.inRent || 0 }}</dd>
+                                <dt class="col-sm-4">Low Stock Warning</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.lowStockThreshold || 0 }}</dd>
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge" [ngClass]="selectedProductDetail.isActive ? 'badge-success' : 'badge-secondary'">
+                                        {{ selectedProductDetail.isActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </dd>
+                                <dt class="col-sm-4">Description</dt>
+                                <dd class="col-sm-8">{{ selectedProductDetail.description || '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-default" (click)="closeProductDetail()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    }
 
     @if (showForm) {
     <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
@@ -348,17 +421,55 @@
                                         <div class="form-group">
                                             <label class="form-label font-weight-bold">Brand <span
                                                     class="text-danger">*</span></label>
-                                            <select class="form-control shadow-sm" [(ngModel)]="product.brandId"
-                                                name="brandId" #brandField="ngModel"
-                                                [ngClass]="{'is-invalid': brandField.invalid && brandField.touched}"
-                                                required>
-                                                <option [value]="null" disabled>-- Select Brand --</option>
-                                                @for (b of brands; track b.id) {
-                                                <option [value]="b.id">{{ b.name }}</option>
-                                                }
-                                            </select>
+                                            <div class="input-group shadow-sm">
+                                                <select class="form-control" [(ngModel)]="product.brandId"
+                                                    name="brandId" #brandField="ngModel"
+                                                    [ngClass]="{'is-invalid': brandField.invalid && brandField.touched}"
+                                                    required>
+                                                    <option [ngValue]="null" disabled>-- Select Brand --</option>
+                                                    @for (b of brands; track b.id) {
+                                                    <option [ngValue]="b.id">{{ b.name }}</option>
+                                                    }
+                                                </select>
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-info"
+                                                        title="Add Brand" (click)="openQuickBrandForm()"
+                                                        [disabled]="showQuickBrandForm">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                             @if (brandField.invalid && brandField.touched) {
                                             <span class="text-danger small">Please select a brand.</span>
+                                            }
+                                            @if (showQuickBrandForm) {
+                                            <div class="mt-2">
+                                                <div class="input-group shadow-sm">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text"><i class="fas fa-tags"></i></span>
+                                                    </div>
+                                                    <input type="text" class="form-control"
+                                                        [(ngModel)]="quickBrandName" name="quickBrandName"
+                                                        placeholder="New brand name"
+                                                        [disabled]="savingQuickBrand">
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-success"
+                                                            title="Save Brand" (click)="saveQuickBrand()"
+                                                            [disabled]="savingQuickBrand || !quickBrandName.trim()">
+                                                            @if (savingQuickBrand) {
+                                                            <span class="spinner-border spinner-border-sm"></span>
+                                                            } @else {
+                                                            <i class="fas fa-check"></i>
+                                                            }
+                                                        </button>
+                                                        <button type="button" class="btn btn-default border"
+                                                            title="Cancel" (click)="closeQuickBrandForm()"
+                                                            [disabled]="savingQuickBrand">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             }
                                         </div>
                                     </div>

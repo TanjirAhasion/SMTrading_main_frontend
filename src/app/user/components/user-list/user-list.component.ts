@@ -1,11 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 
 import { CreateUserRequest } from '../../models/create-user-request.model';
 import { UserListItem } from '../../models/user-list-item.model';
 import { UserService } from '../../services/user.service';
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 @Component({
   selector: 'app-user-list',
@@ -13,7 +12,7 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.css',
 })
-export class UserListComponent implements OnInit {
+export class UserListComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
 
@@ -24,14 +23,8 @@ export class UserListComponent implements OnInit {
   search = '';
   page = 1;
   pageSize = 10;
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle',
-  };
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  toast: ToastState = createEmptyToast();
+  private readonly toastController = new ToastController();
 
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required]],
@@ -52,6 +45,10 @@ export class UserListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+  }
+
+  ngOnDestroy(): void {
+    this.toastController.destroy();
   }
 
   loadUsers(): void {
@@ -180,34 +177,11 @@ export class UserListComponent implements OnInit {
   }
 
   showToast(type: ToastType, title: string, message: string): void {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle',
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = {
-      show: true,
-      type,
-      title,
-      message,
-      icon: icons[type],
-    };
-
-    this.toastTimer = setTimeout(() => this.closeToast(), 3500);
+    this.toastController.show(type, title, message, (toast) => this.toast = toast, () => this.closeToast());
   }
 
   closeToast(): void {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+    this.toastController.close((toast) => this.toast = toast);
   }
 
   private getApiErrorMessage(error: any): string {

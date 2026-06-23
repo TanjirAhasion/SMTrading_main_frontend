@@ -1,0 +1,159 @@
+[1m[31m[2m5:37:39 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/product-serial-lifecycle/BROTHER-ZOJEZJ-A6000-P-G_8C60F3/timeline[31m
+Error: read ECONNRESET
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:216:20)[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG2008: Could not find stylesheet file './report-dashboard.css'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/reports/report-dashboard/report-dashboard.ts:11:12:
+[37m      11 │   styleUrl: [32m'./report-dashboard.css'[37m
+         ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[2m8:02:51 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/brands[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[2m8:02:54 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/products/GetAllBySearchWithPagination?page=1&size=10[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[2m8:02:54 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/brands[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[2m8:02:55 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/productserials/GetAllBySearchWithPagination?page=1&size=10[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[2m8:02:55 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/products[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[2m8:02:55 PM[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/productserials/productSerialStatuses[31m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1142:49)
+    at afterConnectMultiple (node:net:1723:7)[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ProductSerialHistoryType'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/item/product-serial-lifecycle/product-serial-lifecycle.ts:455:31:
+[37m      455 │ ...tem.actionType === [32mProductSerialHistoryType[37m.Purchase || action...
+          ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ProductSerialHistoryType'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/item/product-serial-lifecycle/product-serial-lifecycle.ts:455:31:
+[37m      455 │ ...tem.actionType === [32mProductSerialHistoryType[37m.Purchase || action...
+          ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ProductSerialHistoryType'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/item/product-serial-lifecycle/product-serial-lifecycle.ts:457:31:
+[37m      457 │ ...tem.actionType === [32mProductSerialHistoryType[37m.Purchase || action...
+          ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ProductSerialHistoryType'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/item/product-serial-lifecycle/product-serial-lifecycle.ts:457:31:
+[37m      457 │ ...tem.actionType === [32mProductSerialHistoryType[37m.Purchase || action...
+          ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ProductSerialHistoryType'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/item/product-serial-lifecycle/product-serial-lifecycle.ts:457:31:
+[37m      457 │ ...tem.actionType === [32mProductSerialHistoryType[37m.Purchase || action...
+          ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2741: Property 'saleDate' is missing in type '{ customerId: number; subTotal: number; discount: number; totalAmount: number; paidAmount: number; cashAccountId: number; paymentMethod: string; items: never[]; }' but required in type 'CreateInvoiceRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/invoice/invoice.ts:44:2:
+[37m      44 │   [32mrequest[37m: CreateInvoiceRequest = {
+         ╵   [32m~~~~~~~[0m
+
+  'saleDate' is declared here.
+
+    src/app/service/inventory/invoice.service.ts:23:2:
+[37m      23 │   [32msaleDate[37m: string;
+         ╵   [32m~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2741: Property 'saleDate' is missing in type '{ customerId: number; subTotal: number; discount: number; totalAmount: number; paidAmount: number; cashAccountId: number; paymentMethod: string; items: never[]; }' but required in type 'CreateInvoiceRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/invoice/invoice.ts:395:4:
+[37m      395 │     [32mthis.request[37m = {
+          ╵     [32m~~~~~~~~~~~~[0m
+
+  'saleDate' is declared here.
+
+    src/app/service/inventory/invoice.service.ts:23:2:
+[37m      23 │   [32msaleDate[37m: string;
+         ╵   [32m~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '{ productId: number; quantity: number; unitCost: number; discount: number; productSerialNumber: never[]; }' is not assignable to parameter of type 'CreatePurchaseItemRequest'.
+  Type '{ productId: number; quantity: number; unitCost: number; discount: number; productSerialNumber: never[]; }' is missing the following properties from type 'CreatePurchaseItemRequest': sellingCost, rentalCost[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/purchase/purchase.ts:168:28:
+[37m      168 │     this.request.items.push([32m{[37m
+          ╵                             [32m^[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'saleDate' does not exist in type 'CreateInvoiceRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/invoice/invoice.ts:52:4:
+[37m      52 │     [32msaleDate[37m: new Date().toISOString().split('T')[0],
+         ╵     [32m~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'saleDate' does not exist on type 'CreateInvoiceRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/invoice/invoice.ts:387:17:
+[37m      387 │     this.request.[32msaleDate[37m = this.saleDate;
+          ╵                  [32m~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'saleDate' does not exist in type 'CreateInvoiceRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/inventory/invoice/invoice.ts:409:6:
+[37m      409 │       [32msaleDate[37m: new Date().toISOString().split('T')[0],
+          ╵       [32m~~~~~~~~[0m
+
+[39m[22m

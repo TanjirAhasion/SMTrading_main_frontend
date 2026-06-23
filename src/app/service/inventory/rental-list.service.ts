@@ -14,6 +14,15 @@ export interface RentalContractInvoiceItemDto {
   totalRent: number;
 }
 
+export enum RentalContractStatus {
+  Draft = 1,
+  Active = 2,
+  Suspended = 3,
+  Completed = 4,
+  Cancelled = 5,
+  Overdue = 6
+}
+
 export interface RentalContractInvoiceDto {
   id: string | number;
   contractNumber: string;
@@ -24,7 +33,7 @@ export interface RentalContractInvoiceDto {
   note?: string | null;           // Mapped from string?
   customerFullName: string;
   companyName: string;
-  status: number;                 // You could also create a RentalStatusEnum here
+  status: RentalContractStatus;
   nextBillingDate: Date | string;
   paymentMethod: number;
   // Note: Usually, the header contains the items list, 
@@ -47,7 +56,7 @@ export interface RentalItem {
   securityDeposit: number;
   totalRent: number;
   totalAmount?: number;
-  status: string | number;
+  status: string | RentalContractStatus;
   isActive: boolean;
   note?: string | null;
   nextBillingDate?: Date | string;
@@ -61,7 +70,7 @@ export interface SearchRentalDto {
   endDate?: string;
   companyName?: string;
   customerId?: string;
-  status?: string;
+  status?: string | number;
   pageNumber: number;
   pageSize: number;
 }
@@ -109,5 +118,9 @@ export class RentalListService {
 
       getById(id: string | number): Observable<RentalContractInvoiceDto> {
           return this.http.get<RentalContractInvoiceDto>(`${this.apiUrl}/${id}`);
+      }
+
+      generateNextBill(id: string | number): Observable<string | number> {
+          return this.http.post<string | number>(`${this.apiUrl}/${id}/generate-next-bill`, {});
       }
 }

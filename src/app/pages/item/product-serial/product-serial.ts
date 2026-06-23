@@ -1,15 +1,17 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService, Product } from '../../../service/item/product.service';
-import { ProductSerialService, ProductSerialDto, ProductSerialStatus } from '../../../service/item/product-serial.service';
+import { ProductSerialService, ProductSerialDto, ProductSerialStatus, ProductSerialStatusEnum } from '../../../service/item/product-serial.service';
 import { ProductSerialImage, ProductSerialImageService } from '../../../service/item/product-serial-image.service';
 import { environmentImageUrl } from '../../../../environments/environment';
 import { QRCodeComponent } from 'angularx-qrcode';
+import { PdfService } from '../../../service/common/pdf.service';
+import { ExcelService } from '../../../service/common/excel.service';
+import { PrintService } from '../../../service/common/print.service';
+import { createEmptyToast, ToastController, ToastState, ToastType } from '../../../service/common/toast-helper';
 
 declare var $: any;
-
-type ToastType = 'success' | 'danger' | 'warning' | 'info';
 
 @Component({
   selector: 'app-product-serial',
@@ -20,19 +22,19 @@ type ToastType = 'success' | 'danger' | 'warning' | 'info';
   styleUrl: './product-serial.css',
 })
 
-export class ProductSerialComponent implements OnInit {
+export class ProductSerialComponent implements OnInit, OnDestroy {
   page: number = 1;
   pageSize: number = 10;
   totalCount: number = 0;
   search: string = '';
   selectedStatusId = '';
-  toast: { show: boolean; type: ToastType; title: string; message: string; icon: string } = {
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    icon: 'fas fa-check-circle'
-  };
+  selectedLinkStatus = '';
+  selectedActiveStatus = '';
+  appliedSearch = '';
+  appliedStatusId = '';
+  appliedLinkStatus = '';
+  appliedActiveStatus = '';
+  toast: ToastState = createEmptyToast();
 
   serials: ProductSerialDto[] = [];
   serialStatus: ProductSerialStatus[] = [];
@@ -45,14 +47,18 @@ export class ProductSerialComponent implements OnInit {
   isEditMode = false;
   selectedId: number | null = null;
   selectedSerial: any = null;
+  selectedSerialDetail: ProductSerialDto | null = null;
 
   serial: any = this.resetSerialObject();
-  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly toastController = new ToastController();
 
   constructor(
     private productService: ProductService, // Inject services
     private serialService: ProductSerialService,
     private productSerialImageService: ProductSerialImageService,
+    private pdfService: PdfService,
+    private excelService: ExcelService,
+    private printService: PrintService,
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
@@ -61,25 +67,33 @@ export class ProductSerialComponent implements OnInit {
     this.loadSerialStatus();
   }
 
+  ngOnDestroy(): void {
+    this.toastController.destroy();
+  }
+
   loadSerials() {
     this.loading = true;
+    const selectedStatus = this.appliedStatusId ? Number(this.appliedStatusId) : undefined;
+    const isLinkedPhoto = this.appliedLinkStatus
+      ? this.appliedLinkStatus === 'linked'
+      : undefined;
+
     this.serialService.getSerials(
       this.page,
       this.pageSize,
-      this.search,
-      this.selectedStatusId ? Number(this.selectedStatusId) : undefined
+      this.appliedSearch,
+      selectedStatus,
+      isLinkedPhoto,
+      this.getSelectedIsActive(this.appliedActiveStatus)
     ).subscribe({
       next: (res) => {
         this.serials = res.items;
         this.totalCount = res.totalCount;
+        this.selectedSerialDetail = null;
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error loading serials', err);
-        this.loading = false;
-        this.showToast('danger', 'Load Failed', 'Unable to load serial inventory.');
-      }
+      error: (err) => this.handleSerialLoadError(err)
     });
   }
 
@@ -184,16 +198,15 @@ export class ProductSerialComponent implements OnInit {
       const qrImage = this.getQrImage(item.serialNumber);
 
       labelsHtml += `
-      <div class="label">
-
-          <img src="${qrImage}" width="120" />
-
-          <div class="serial">
-              ${item.serialNumber}
+        <div class="label">
+          <div class="qr-box">
+            <img src="${qrImage}" alt="QR ${item.serialNumber}" />
           </div>
-
-      </div>
-    `;
+          <div class="serial">${item.serialNumber}</div>
+          <div class="meta">${item.productName || 'Machine Unit'}</div>
+          <div class="sub-meta">${item.brandName || ''}${item.model ? ' | ' + item.model : ''}</div>
+        </div>
+      `;
     }
 
     const printWindow = window.open('', '_blank', 'width=1000,height=800');
@@ -207,36 +220,95 @@ export class ProductSerialComponent implements OnInit {
 
         <style>
 
-          body{
-            font-family: Arial;
-            padding:20px;
+          * {
+            box-sizing: border-box;
           }
 
-          .container{
-            display:flex;
-            flex-wrap:wrap;
+          body {
+            margin: 0;
+            background: #fff;
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
           }
 
-          .label{
-            width:220px;
-            height:220px;
-
-            border:1px solid #ddd;
-
-            margin:10px;
-            padding:10px;
-
-            text-align:center;
-
-            page-break-inside:avoid;
+          .sheet {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10mm;
+            padding: 12mm;
           }
 
-          .serial{
-            margin-top:10px;
-            font-size:14px;
-            font-weight:bold;
+          .label {
+            min-height: 58mm;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 6mm 5mm;
+            text-align: center;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
 
-            word-break:break-all;
+          .qr-box {
+            width: 34mm;
+            height: 34mm;
+            padding: 2mm;
+            border: 1px solid #e5e7eb;
+            border-radius: 3px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .qr-box img {
+            width: 100%;
+            height: 100%;
+            display: block;
+          }
+
+          .serial {
+            width: 100%;
+            margin-top: 4mm;
+            font-size: 12px;
+            line-height: 1.25;
+            font-weight: 700;
+            letter-spacing: 0;
+            word-break: break-word;
+          }
+
+          .meta {
+            width: 100%;
+            margin-top: 1.5mm;
+            font-size: 10px;
+            line-height: 1.2;
+            color: #374151;
+            font-weight: 600;
+            word-break: break-word;
+          }
+
+          .sub-meta {
+            width: 100%;
+            margin-top: 1mm;
+            font-size: 9px;
+            line-height: 1.2;
+            color: #6b7280;
+            word-break: break-word;
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 0;
+            }
+
+            .sheet {
+              padding: 10mm;
+              gap: 8mm;
+            }
           }
 
         </style>
@@ -245,7 +317,7 @@ export class ProductSerialComponent implements OnInit {
 
       <body>
 
-        <div class="container">
+        <div class="sheet">
           ${labelsHtml}
         </div>
 
@@ -286,16 +358,141 @@ export class ProductSerialComponent implements OnInit {
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(serial)}`;
   }
 
+  downloadExcel() {
+    this.getReportSerials((items) => {
+      const rows = items.map((item, index) => ({
+        SL: index + 1,
+        Serial: item.serialNumber,
+        Product: item.productName || '-',
+        Brand: item.brandName || '-',
+        Model: item.model || '-',
+        Status: item.status?.replace('In', 'In ') || '-',
+        LinkedPhoto: item.isSerialNumberLinkToProduct ? 'Linked' : 'Not Linked',
+        PurchaseCost: this.formatNumber(item.purchaseCost),
+        SellingCost: this.formatNumber(item.sellingCost),
+        RentalCost: this.formatNumber(item.rentalCost)
+      }));
+
+      this.excelService.exportToExcel(rows, 'machine-serial-report');
+    });
+  }
+
+  downloadPdf() {
+    this.getReportSerials((items) => {
+      const columns = [
+        { header: 'SL', field: 'sl' },
+        { header: 'Serial', field: 'serial' },
+        { header: 'Product', field: 'product' },
+        { header: 'Brand', field: 'brand' },
+        { header: 'Model', field: 'model' },
+        { header: 'Status', field: 'status' },
+        { header: 'Photo', field: 'photo' }
+      ];
+
+      const rows = items.map((item, index) => ({
+        sl: index + 1,
+        serial: item.serialNumber,
+        product: item.productName || '-',
+        brand: item.brandName || '-',
+        model: item.model || '-',
+        status: item.status?.replace('In', 'In ') || '-',
+        photo: item.isSerialNumberLinkToProduct ? 'Linked' : 'Not Linked'
+      }));
+
+      this.pdfService.downloadTablePdf('Machine Serial Report', columns, rows, 'machine-serials.pdf');
+    });
+  }
+
+  printReport() {
+    this.getReportSerials((items) => {
+      this.printService.printReport({
+        title: 'Machine Serial Report',
+        data: items,
+        columns: [
+          { header: 'SL', value: (_item, index) => String(index + 1), align: 'center' },
+          { header: 'Serial', value: item => item.serialNumber || '-' },
+          { header: 'Product', value: item => item.productName || '-' },
+          { header: 'Brand', value: item => item.brandName || '-' },
+          { header: 'Model', value: item => item.model || '-' },
+          { header: 'Status', value: item => item.status?.replace('In', 'In ') || '-', align: 'center' },
+          { header: 'Photo', value: item => item.isSerialNumberLinkToProduct ? 'Linked' : 'Not Linked', align: 'center' },
+          { header: 'Purchase', value: item => this.formatNumber(item.purchaseCost), align: 'right' },
+          { header: 'Selling', value: item => this.formatNumber(item.sellingCost), align: 'right' },
+          { header: 'Rental', value: item => this.formatNumber(item.rentalCost), align: 'right' }
+        ]
+      });
+    });
+  }
+
+  private getReportSerials(callback: (items: ProductSerialDto[]) => void) {
+    if (this.totalCount <= this.serials.length) {
+      callback(this.serials);
+      return;
+    }
+
+    const selectedStatus = this.appliedStatusId ? Number(this.appliedStatusId) : undefined;
+    const isLinkedPhoto = this.appliedLinkStatus
+      ? this.appliedLinkStatus === 'linked'
+      : undefined;
+
+    this.serialService.getSerials(
+      1,
+      this.totalCount,
+      this.appliedSearch,
+      selectedStatus,
+      isLinkedPhoto,
+      this.getSelectedIsActive(this.appliedActiveStatus)
+    ).subscribe({
+      next: (res) => callback(res.items || []),
+      error: (err) => {
+        console.error('Report export failed:', err);
+        callback(this.serials);
+      }
+    });
+  }
+
+  private formatNumber(value: number | string | null | undefined): string {
+    return (Number(value) || 0).toFixed(2);
+  }
+
   onSearch() {
+    this.appliedSearch = this.search;
+    this.appliedStatusId = this.selectedStatusId;
+    this.appliedLinkStatus = this.selectedLinkStatus;
+    this.appliedActiveStatus = this.selectedActiveStatus;
     this.page = 1; // Reset to page 1 for search
+    this.loadSerials();
+  }
+
+  onPageSizeChange() {
+    this.page = 1;
     this.loadSerials();
   }
 
   resetFilters() {
     this.search = '';
     this.selectedStatusId = '';
+    this.selectedLinkStatus = '';
+    this.selectedActiveStatus = '';
+    this.appliedSearch = '';
+    this.appliedStatusId = '';
+    this.appliedLinkStatus = '';
+    this.appliedActiveStatus = '';
     this.page = 1;
+    this.selectedSerialDetail = null;
     this.loadSerials();
+  }
+
+  private getSelectedIsActive(value: string): boolean | undefined {
+    if (value === 'active') return true;
+    if (value === 'inactive') return false;
+    return undefined;
+  }
+
+  private handleSerialLoadError(err: unknown) {
+    console.error('Error loading serials', err);
+    this.loading = false;
+    this.showToast('danger', 'Load Failed', 'Unable to load serial inventory.');
   }
 
   loadGalleryImages(serialId: number) {
@@ -409,9 +606,14 @@ export class ProductSerialComponent implements OnInit {
       return;
     }
 
+    const payload = {
+      ...this.serial,
+      status: this.isEditMode ? this.getStatusName(this.serial.status) : Number(this.serial.status)
+    };
+
     const request = (this.isEditMode && this.selectedId)
-      ? this.serialService.update(this.selectedId, this.serial)
-      : this.serialService.create(this.serial);
+      ? this.serialService.update(this.selectedId, payload)
+      : this.serialService.create(payload);
     const message = this.isEditMode ? 'Machine unit updated successfully.' : 'Machine unit generated successfully.';
 
     request.subscribe({
@@ -430,8 +632,47 @@ export class ProductSerialComponent implements OnInit {
   edit(item: ProductSerialDto) {
     this.isEditMode = true;
     this.selectedId = item.id;
-    this.serial = { ...item };
+    this.serial = {
+      ...item,
+      status: this.getStatusId(item.status) ?? ProductSerialStatusEnum.InStock
+    };
     this.showForm = true;
+  }
+
+  showSerialDetail(item: ProductSerialDto) {
+    this.selectedSerialDetail = item;
+  }
+
+  closeSerialDetail() {
+    this.selectedSerialDetail = null;
+  }
+
+  private getStatusId(status: string | number | null | undefined): number | null {
+    if (typeof status === 'number') {
+      return status;
+    }
+
+    if (!status) {
+      return null;
+    }
+
+    const numericStatus = Number(status);
+    if (!Number.isNaN(numericStatus)) {
+      return numericStatus;
+    }
+
+    return this.serialStatus.find((item) => item.name === status)?.id ?? null;
+  }
+
+  private getStatusName(status: string | number | null | undefined): string {
+    if (typeof status === 'string' && Number.isNaN(Number(status))) {
+      return status;
+    }
+
+    const statusId = this.getStatusId(status);
+    return this.serialStatus.find((item) => item.id === statusId)?.name
+      ?? ProductSerialStatusEnum[statusId as ProductSerialStatusEnum]
+      ?? ProductSerialStatusEnum[ProductSerialStatusEnum.InStock];
   }
 
   onOpeningStockChange(isOpeningStock: boolean) {
@@ -444,7 +685,7 @@ export class ProductSerialComponent implements OnInit {
     return {
       serialNumber: '',
       productId: null,
-      status: 'Available',
+      status: ProductSerialStatusEnum.InStock,
       purchaseCost: 0,
       sellingCost: 0,
       rentalCost: 0,
@@ -671,35 +912,16 @@ export class ProductSerialComponent implements OnInit {
   }
 
   showToast(type: ToastType, title: string, message: string) {
-    const icons: Record<ToastType, string> = {
-      success: 'fas fa-check-circle',
-      danger: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
-    };
-
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-
-    this.toast = {
-      show: true,
+    this.toastController.show(
       type,
       title,
       message,
-      icon: icons[type]
-    };
-
-    this.toastTimer = setTimeout(() => {
-      this.closeToast();
-    }, 3500);
+      (toast) => this.toast = toast,
+      () => this.closeToast()
+    );
   }
 
   closeToast() {
-    this.toast.show = false;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+    this.toastController.close((toast) => this.toast = toast);
   }
 }

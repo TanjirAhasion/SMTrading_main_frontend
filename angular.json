@@ -72,7 +72,10 @@
             }
           },
           "defaultConfiguration": "development",
-          "options": {}
+          "options": {
+            "port": 4240,
+            "proxyConfig": "proxy.conf.json"
+          }
         },
         "test": {
           "builder": "@ngx-env/builder:unit-test",

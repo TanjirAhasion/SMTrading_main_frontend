@@ -1,0 +1,223 @@
+<div class="content-wrapper">
+    @if (toast.show) {
+    <div class="toasts-top-right fixed">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" [ngClass]="'bg-' + toast.type">
+                <i class="{{ toast.icon }} mr-2"></i>
+                <strong class="mr-auto">{{ toast.title }}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" aria-label="Close" (click)="closeToast()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">{{ toast.message }}</div>
+        </div>
+    </div>
+    }
+
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 font-weight-bold">
+                        <i class="fas fa-history mr-2 text-info"></i>Cash Flow History
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Showing Entries</span>
+                            <span class="info-box-number text-lg">{{ transactions.length }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-success"><i class="fas fa-arrow-down"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Page Cash In</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(cashInAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-arrow-up"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Page Cash Out</span>
+                            <span class="info-box-number text-lg">{{ formatNumber(cashOutAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Date From</label>
+                            <input type="date" class="form-control" [(ngModel)]="fromDate">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Date To</label>
+                            <input type="date" class="form-control" [(ngModel)]="toDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small text-muted mb-1">Cash Account</label>
+                            <select class="form-control" [(ngModel)]="cashAccountId">
+                                <option [ngValue]="null">All accounts</option>
+                                @for (account of cashAccounts; track account.id) {
+                                <option [ngValue]="account.id">{{ account.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Transaction Type</label>
+                            <select class="form-control" [(ngModel)]="transactionType">
+                                <option [ngValue]="null">All types</option>
+                                @for (type of transactionTypes; track type.id) {
+                                <option [ngValue]="type.id">{{ type.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small text-muted mb-1">Source Type</label>
+                            <select class="form-control" [(ngModel)]="sourceType">
+                                <option [ngValue]="null">All sources</option>
+                                @for (source of sourceTypes; track source.id) {
+                                <option [ngValue]="source.id">{{ source.name }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Reference Number</label>
+                            <input type="text" class="form-control" [(ngModel)]="referenceNumber">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Amount From</label>
+                            <input type="number" class="form-control" [(ngModel)]="amountFrom" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Amount To</label>
+                            <input type="number" class="form-control" [(ngModel)]="amountTo" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted mb-1">Created By</label>
+                            <input type="text" class="form-control" [(ngModel)]="createdBy" placeholder="User id">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small text-muted mb-1">Keyword Search</label>
+                            <input type="text" class="form-control" [(ngModel)]="keyword"
+                                placeholder="Account, note, reference...">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button class="btn btn-info" (click)="searchHistory()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <button class="btn btn-default border" (click)="resetFilters()">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-outline card-info shadow-sm">
+                <div class="card-body p-0">
+                    @if (loading) {
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-info mb-3" role="status"></div>
+                        <p class="text-muted">Loading cash flow history...</p>
+                    </div>
+                    }
+
+                    @if (!loading && transactions.length > 0) {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-valign-middle mb-0 mobile-card-table">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Account</th>
+                                    <th>Type</th>
+                                    <th>Source</th>
+                                    <th>Reference</th>
+                                    <th class="text-right">Amount</th>
+                                    <th>Created By</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of transactions; track item.id; let i = $index) {
+                                <tr>
+                                    <td data-label="Date">{{ formatDate(item.transactionDate) }}</td>
+                                    <td class="font-weight-bold" data-label="Account">{{ item.cashAccountName || '-' }}</td>
+                                    <td data-label="Type">
+                                        <span class="badge px-3 py-2" [ngClass]="getTransactionBadgeClass(item.transactionType)">
+                                            {{ getTransactionTypeName(item.transactionType) }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Source">{{ getSourceTypeName(item.sourceType) }}</td>
+                                    <td data-label="Reference">{{ item.referenceNumber || item.referenceId || '-' }}</td>
+                                    <td class="text-right font-weight-bold" data-label="Amount"
+                                        [ngClass]="item.transactionType === 2 ? 'text-danger' : 'text-success'" data-label="Amount">
+                                        {{ formatNumber(item.amount) }}
+                                    </td>
+                                    <td data-label="Created By">{{ item.createdBy || '-' }}</td>
+                                    <td class="text-muted" data-label="Note">{{ item.note || '-' }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+
+                    @if (!loading && transactions.length === 0) {
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-bold mt-3 mb-0 text-muted">No Cash Flow Found</p>
+                    </div>
+                    }
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            Showing <b>{{ pageStart }}</b> to <b>{{ pageEnd }}</b> of <b>{{ totalCount }}</b> entries
+                        </div>
+                        <div class="d-flex align-items-center mt-2 mt-sm-0">
+                            <select class="form-control form-control-sm mr-2" style="width: 80px;"
+                                [(ngModel)]="pageSize" (ngModelChange)="searchHistory()">
+                                <option [ngValue]="5">5</option>
+                                <option [ngValue]="10">10</option>
+                                <option [ngValue]="25">25</option>
+                                <option [ngValue]="50">50</option>
+                            </select>
+                            <ul class="pagination pagination-sm m-0">
+                                <li class="page-item" [class.disabled]="page === 1">
+                                    <button class="page-link" type="button" (click)="onPageChange(page - 1)">Previous</button>
+                                </li>
+                                <li class="page-item active">
+                                    <span class="page-link shadow-sm bg-info border-info">{{ page }}</span>
+                                </li>
+                                <li class="page-item" [class.disabled]="page >= totalPages">
+                                    <button class="page-link" type="button" (click)="onPageChange(page + 1)">Next</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

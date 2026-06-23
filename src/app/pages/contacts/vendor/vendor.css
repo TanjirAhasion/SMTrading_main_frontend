@@ -10,3 +10,120 @@
     font-size: 0.9rem;
     color: #555;
 }
+
+.vendor-modal-header {
+    border-bottom: 0;
+}
+
+.vendor-modal .modal-body {
+    max-height: 72vh;
+    overflow-y: auto;
+}
+
+.vendor-payment-panel .form-control {
+    min-height: 42px;
+}
+
+.vendor-due-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.35rem;
+    background: #f8fafc;
+}
+
+.vendor-summary-info {
+    min-width: 0;
+}
+
+.vendor-summary-info h6 {
+    color: #343a40;
+}
+
+.vendor-summary-due {
+    flex: 0 0 auto;
+}
+
+.vendor-due-summary-wide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, auto) minmax(160px, auto);
+}
+
+.vendor-summary-balance {
+    text-align: center;
+    padding: 0 1.25rem;
+    border-left: 1px solid #e0edf0;
+    border-right: 1px solid #e0edf0;
+}
+
+.vendor-balance-amount {
+    display: block;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #138496;
+}
+
+.vendor-due-amount {
+    display: block;
+    font-size: 1.65rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #dc3545;
+}
+
+.cash-balance-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.35rem;
+    background: #e8f7fb;
+    border: 1px solid rgba(23, 162, 184, 0.45);
+    box-shadow: inset 4px 0 0 #17a2b8;
+}
+
+.cash-balance-label {
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #117a8b;
+}
+
+.cash-balance-amount {
+    color: #0f6674;
+    font-size: 1.25rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .vendor-due-summary {
+        display: block;
+    }
+
+    .vendor-due-summary-wide {
+        display: block;
+    }
+
+    .vendor-summary-balance {
+        text-align: left;
+        padding: 0.85rem 0;
+        margin: 0.85rem 0;
+        border-left: 0;
+        border-right: 0;
+        border-top: 1px solid #e0edf0;
+        border-bottom: 1px solid #e0edf0;
+    }
+
+    .vendor-summary-due {
+        text-align: left !important;
+        margin-top: 0.75rem;
+    }
+}
